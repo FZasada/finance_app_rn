@@ -35,7 +35,7 @@ jobs:
         run: npm install -g @expo/cli
 
       - name: Export for web
-        run: npx expo export:web
+        run: npx expo export --platform web
         env:
           NODE_ENV: production
 
