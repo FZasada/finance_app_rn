@@ -1,98 +1,527 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import AddTransactionModal from '@/components/AddTransactionModal';
+import SetBudgetModal from '@/components/SetBudgetModal';
+import { useAuth } from '@/contexts/AuthContext';
+import { useHousehold } from '@/contexts/HouseholdContext';
+import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
+import { supabase } from '@/lib/supabase';
+import { transactionService } from '@/lib/transactionService';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import {
+  Dimensions,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { LineChart, PieChart } from 'react-native-chart-kit';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+const screenWidth = Dimensions.get("window").width;
 
-export default function HomeScreen() {
+interface DashboardData {
+  monthlyBudget: number;
+  spent: number;
+  income: number;
+  savings: number;
+  expensesByCategory: {
+    categoryName: string;
+    amount: number;
+    color: string;
+    percentage: number;
+  }[];
+  weeklyExpenses: {
+    day: string;
+    amount: number;
+  }[];
+}
+
+export default function DashboardScreen() {
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const { household } = useHousehold();
+  
+  const [dashboardData, setDashboardData] = useState<DashboardData>({
+    monthlyBudget: 0,
+    spent: 0,
+    income: 0,
+    savings: 0,
+    expensesByCategory: [],
+    weeklyExpenses: [],
+  });
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showBudgetModal, setShowBudgetModal] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [modalType, setModalType] = useState<'income' | 'expense'>('expense');
+
+  const loadDashboardData = useCallback(async () => {
+    if (!user || !household) return;
+
+    try {
+      // Get current month
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+      const currentMonth = `${year}-${month.toString().padStart(2, '0')}`;
+
+      // Get budget for current month
+      const { data: budgetData } = await supabase
+        .from('budgets')
+        .select('amount')
+        .eq('household_id', household.id)
+        .eq('month', currentMonth)
+        .single();
+
+      // Get income vs expenses data using transaction service
+      const incomeVsExpenses = await transactionService.getIncomeVsExpenses(
+        year, 
+        month, 
+        household.id
+      );
+
+      // Get expenses by category
+      const expensesByCategory = await transactionService.getExpensesByCategory(
+        year,
+        month,
+        household.id
+      );
+
+      const monthlyBudget = budgetData?.amount || 0;
+
+      // Get weekly expenses for line chart
+      const weeklyExpenses = await transactionService.getWeeklyExpenses(
+        user.id,
+        household.id
+      );
+
+      setDashboardData({
+        monthlyBudget,
+        spent: incomeVsExpenses.expenses,
+        income: incomeVsExpenses.income,
+        savings: incomeVsExpenses.balance,
+        expensesByCategory,
+        weeklyExpenses,
+      });
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [user, household]);
+
+  const handleRefresh = useCallback(() => {
+    console.log('Dashboard refresh triggered');
+    setRefreshing(true);
+    loadDashboardData();
+  }, [loadDashboardData]);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
+
+  // Setup real-time updates
+  useRealtimeUpdates({
+    onTransactionUpdate: () => {
+      loadDashboardData(); // Reload dashboard when transactions change
+    },
+    onBudgetUpdate: () => {
+      loadDashboardData(); // Reload dashboard when budget changes
+    },
+    enableNotifications: true,
+  });
+
+  const budgetPercentage = dashboardData.monthlyBudget > 0 
+    ? (dashboardData.spent / dashboardData.monthlyBudget) * 100 
+    : 0;
+  const budgetRemaining = dashboardData.monthlyBudget - dashboardData.spent;
+  const isOverBudget = dashboardData.spent > dashboardData.monthlyBudget;
+
+  const handleQuickAction = (type: 'income' | 'expense') => {
+    setModalType(type);
+    setShowAddModal(true);
+  };
+
+  // Chart data for weekly expenses
+  const chartData = {
+    labels: dashboardData.weeklyExpenses.map(item => item.day),
+    datasets: [
+      {
+        data: dashboardData.weeklyExpenses.map(item => item.amount),
+        color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`, // optional
+        strokeWidth: 2 // optional
+      }
+    ],
+    legend: [t('dashboard.weeklyExpenses')]
+  };    // Mock data for charts - replace with real data later
+  const expenseData = dashboardData.expensesByCategory.length > 0 
+    ? dashboardData.expensesByCategory.map(cat => ({
+        name: cat.categoryName,
+        amount: cat.amount,
+        color: cat.color,
+        legendFontColor: '#7F7F7F',
+        legendFontSize: 14,
+      }))
+    : [
+        {
+          name: 'No Data',
+          amount: 1,
+          color: '#CCCCCC',
+          legendFontColor: '#7F7F7F',
+          legendFontSize: 14,
+        }
+      ];
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <SafeAreaView style={styles.container}>
+      <ScrollView 
+        style={styles.scrollView}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor="#007AFF"
+            colors={['#007AFF']}
+          />
+        }
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>{t('dashboard.title')}</Text>
+          <Text style={styles.greeting}>
+            Hi, {user?.email?.split('@')[0]}!
+          </Text>
+        </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        {/* Budget Overview */}
+        <View style={styles.budgetCard}>
+          <View style={styles.budgetHeader}>
+            <Text style={styles.cardTitle}>{t('dashboard.monthlyBudget')}</Text>
+            <TouchableOpacity 
+              style={styles.setBudgetButton}
+              onPress={() => setShowBudgetModal(true)}
+            >
+              <Text style={styles.setBudgetButtonText}>
+                {dashboardData.monthlyBudget > 0 ? t('common.edit') : t('budget.setBudget')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          
+          {dashboardData.monthlyBudget > 0 ? (
+            <>
+              <Text style={styles.budgetAmount}>€{dashboardData.monthlyBudget}</Text>
+              
+              <View style={styles.budgetProgress}>
+                <View style={styles.progressBar}>
+                  <View 
+                    style={[
+                      styles.progressFill, 
+                      { 
+                        width: `${Math.min(budgetPercentage, 100)}%`,
+                        backgroundColor: isOverBudget ? '#FF3B30' : '#007AFF'
+                      }
+                    ]} 
+                  />
+                </View>
+                <Text style={styles.progressText}>
+                  {budgetPercentage.toFixed(1)}% {t('budget.percentageUsed')}
+                </Text>
+              </View>
+
+              <View style={styles.budgetStats}>
+                <View style={styles.statItem}>
+                  <Text style={styles.statLabel}>{t('dashboard.budgetUsed')}</Text>
+                  <Text style={[styles.statValue, isOverBudget && styles.overBudgetText]}>
+                    €{dashboardData.spent}
+                  </Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={styles.statLabel}>
+                    {isOverBudget ? t('dashboard.budgetExceeded') : t('dashboard.budgetRemaining')}
+                  </Text>
+                  <Text style={[styles.statValue, isOverBudget && styles.overBudgetText]}>
+                    €{Math.abs(budgetRemaining)}
+                  </Text>
+                </View>
+              </View>
+            </>
+          ) : (
+            <View style={styles.noBudgetContainer}>
+              <Text style={styles.noBudgetText}>{t('dashboard.noBudgetSet')}</Text>
+              <Text style={styles.noBudgetSubtext}>
+                {t('quickActions.description')}
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* Income & Savings */}
+        <View style={styles.statsRow}>
+          <View style={[styles.statCard, { marginRight: 10 }]}>
+            <Text style={styles.cardTitle}>{t('dashboard.totalIncome')}</Text>
+            <Text style={[styles.statValue, { color: '#28A745' }]}>€{dashboardData.income}</Text>
+          </View>
+          <View style={[styles.statCard, { marginLeft: 10 }]}>
+            <Text style={styles.cardTitle}>{t('dashboard.savings')}</Text>
+            <Text style={[styles.statValue, { color: '#28A745' }]}>€{dashboardData.savings}</Text>
+          </View>
+        </View>
+
+        {/* Weekly Spending Chart */}
+        <View style={styles.chartCard}>
+          <Text style={styles.cardTitle}>{t('dashboard.weeklySpending')}</Text>
+          <LineChart
+            data={chartData}
+            width={screenWidth - 60}
+            height={220}
+            chartConfig={{
+              backgroundColor: '#fff',
+              backgroundGradientFrom: '#fff',
+              backgroundGradientTo: '#fff',
+              decimalPlaces: 0,
+              color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
+              labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+              style: {
+                borderRadius: 16
+              },
+              propsForDots: {
+                r: "6",
+                strokeWidth: "2",
+                stroke: "#007AFF"
+              }
+            }}
+            bezier
+            style={styles.chart}
+          />
+        </View>
+
+        {/* Expense Categories */}
+        <View style={styles.chartCard}>
+          <Text style={styles.cardTitle}>{t('dashboard.expenseCategories')}</Text>
+          <PieChart
+            data={expenseData}
+            width={screenWidth - 60}
+            height={220}
+            chartConfig={{
+              color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+            }}
+            accessor="amount"
+            backgroundColor="transparent"
+            paddingLeft="15"
+            absolute
+          />
+        </View>
+
+        {/* Quick Actions */}
+        <View style={styles.quickActions}>
+          <Text style={styles.sectionTitle}>{t('quickActions.title')}</Text>
+          <View style={styles.actionButtons}>
+            <TouchableOpacity 
+              style={[styles.actionButton, { backgroundColor: '#FF3B30' }]}
+              onPress={() => handleQuickAction('expense')}
+            >
+              <Text style={styles.actionButtonText}>{t('transactions.addExpense')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.actionButton, { backgroundColor: '#28A745' }]}
+              onPress={() => handleQuickAction('income')}
+            >
+              <Text style={styles.actionButtonText}>{t('transactions.addIncome')}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+
+      <AddTransactionModal
+        visible={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSuccess={loadDashboardData}
+        initialType={modalType}
+      />
+
+      <SetBudgetModal
+        visible={showBudgetModal}
+        onClose={() => setShowBudgetModal(false)}
+        onSuccess={loadDashboardData}
+        currentBudget={dashboardData.monthlyBudget}
+      />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
   },
-  stepContainer: {
-    gap: 8,
+  scrollView: {
+    flex: 1,
+  },
+  header: {
+    padding: 20,
+    backgroundColor: 'white',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 5,
+  },
+  greeting: {
+    fontSize: 16,
+    color: '#666',
+  },
+  budgetCard: {
+    backgroundColor: 'white',
+    margin: 20,
+    padding: 20,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  budgetHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  setBudgetButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  setBudgetButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 10,
+  },
+  budgetAmount: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 15,
+  },
+  budgetProgress: {
+    marginBottom: 20,
+  },
+  progressBar: {
+    height: 8,
+    backgroundColor: '#E5E5EA',
+    borderRadius: 4,
+    overflow: 'hidden',
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  progressFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  progressText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+  },
+  budgetStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  statItem: {
+    flex: 1,
+  },
+  statLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 5,
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  overBudgetText: {
+    color: '#FF3B30',
+  },
+  noBudgetContainer: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  noBudgetText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 8,
+  },
+  noBudgetSubtext: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    marginHorizontal: 20,
+    marginBottom: 20,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  chartCard: {
+    backgroundColor: 'white',
+    margin: 20,
+    padding: 20,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    alignItems: 'center',
+  },
+  chart: {
+    marginVertical: 8,
+    borderRadius: 16,
+  },
+  quickActions: {
+    margin: 20,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 15,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  actionButton: {
+    flex: 1,
+    backgroundColor: '#007AFF',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginHorizontal: 5,
+  },
+  actionButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

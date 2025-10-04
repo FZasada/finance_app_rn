@@ -1,0 +1,130 @@
+{
+  "common": {
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "delete": "Verwijderen",
+    "edit": "Bewerken",
+    "add": "Toevoegen",
+    "loading": "Laden...",
+    "error": "Fout",
+    "success": "Succes",
+    "confirm": "Bevestigen",
+    "back": "Terug",
+    "next": "Volgende",
+    "finish": "Voltooien"
+  },
+  "auth": {
+    "login": "Inloggen",
+    "register": "Registreren",
+    "email": "E-mail",
+    "password": "Wachtwoord",
+    "confirmPassword": "Wachtwoord bevestigen",
+    "forgotPassword": "Wachtwoord vergeten?",
+    "loginSuccess": "Inloggen gelukt",
+    "registerSuccess": "Registratie gelukt",
+    "logoutSuccess": "Uitloggen gelukt",
+    "invalidCredentials": "Ongeldige inloggegevens",
+    "passwordTooShort": "Wachtwoord moet minimaal 6 tekens lang zijn",
+    "emailRequired": "E-mail is verplicht",
+    "passwordsNotMatch": "Wachtwoorden komen niet overeen"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "transactions": "Transacties",
+    "budget": "Budget",
+    "household": "Huishouden",
+    "settings": "Instellingen"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "monthlyBudget": "Maandelijks budget",
+    "budgetUsed": "Budget gebruikt",
+    "budgetRemaining": "Budget resterend",
+    "budgetExceeded": "Budget overschreden",
+    "totalIncome": "Totale inkomsten",
+    "totalExpenses": "Totale uitgaven",
+    "savings": "Besparingen",
+    "weeklyExpenses": "Wekelijkse uitgaven",
+    "weeklySpending": "Wekelijkse uitgaven",
+    "recentTransactions": "Recente transacties",
+    "noBudgetSet": "Geen budget ingesteld voor deze maand",
+    "setBudget": "Budget instellen",
+    "expenseCategories": "Uitgavencategorieën"
+  },
+  "transactions": {
+    "title": "Transacties",
+    "addTransaction": "Transactie toevoegen",
+    "addIncome": "Inkomen toevoegen",
+    "addExpense": "Kosten toevoegen",
+    "income": "Inkomsten",
+    "expense": "Uitgave",
+    "amount": "Bedrag",
+    "description": "Beschrijving",
+    "category": "Categorie",
+    "selectCategory": "Selecteer categorie",
+    "date": "Datum",
+    "noTransactions": "Nog geen transacties",
+    "transactionAdded": "Transactie succesvol toegevoegd",
+    "transactionUpdated": "Transactie succesvol bijgewerkt",
+    "transactionDeleted": "Transactie succesvol verwijderd"
+  },
+  "budget": {
+    "title": "Budget",
+    "monthlyBudget": "Maandelijks budget",
+    "setBudget": "Budget instellen",
+    "budgetAmount": "Budgetbedrag",
+    "budgetForMonth": "Budget voor {{month}}",
+    "budgetUpdated": "Budget succesvol bijgewerkt",
+    "currentSpending": "Huidige uitgaven",
+    "percentageUsed": "Gebruikt percentage"
+  },
+  "household": {
+    "title": "Huishouden",
+    "createHousehold": "Huishouden aanmaken",
+    "joinHousehold": "Huishouden toetreden",
+    "householdName": "Huishoudennaam",
+    "inviteCode": "Uitnodigingscode",
+    "members": "Leden",
+    "role": "Rol",
+    "admin": "Beheerder",
+    "member": "Lid",
+    "leaveHousehold": "Huishouden verlaten",
+    "deleteHousehold": "Huishouden verwijderen",
+    "householdCreated": "Huishouden succesvol aangemaakt",
+    "joinedHousehold": "Succesvol toegetreden tot huishouden",
+    "leftHousehold": "Huishouden succesvol verlaten",
+    "noHousehold": "Je bent geen lid van een huishouden"
+  },
+  "settings": {
+    "title": "Instellingen",
+    "language": "Taal",
+    "profile": "Profiel",
+    "notifications": "Meldingen",
+    "logout": "Uitloggen",
+    "deleteAccount": "Account verwijderen",
+    "confirmLogout": "Weet je zeker dat je wilt uitloggen?",
+    "confirmDeleteAccount": "Weet je zeker dat je je account wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt."
+  },
+  "categories": {
+    "groceries": "Boodschappen",
+    "transport": "Transport",
+    "entertainment": "Entertainment",
+    "utilities": "Nutsvoorzieningen",
+    "healthcare": "Gezondheidszorg",
+    "shopping": "Winkelen",
+    "salary": "Salaris",
+    "freelance": "Freelance",
+    "investment": "Investering",
+    "other": "Overig"
+  },
+  "notifications": {
+    "budgetExceeded": "Budget overschreden!",
+    "budgetExceededDesc": "Je hebt je maandelijkse budget overschreden met {{amount}}",
+    "budgetWarning": "Budgetwaarschuwing!",
+    "budgetWarningDesc": "Je hebt {{percentage}}% van je maandelijkse budget gebruikt"
+  },
+  "quickActions": {
+    "title": "Snelle acties",
+    "description": "Stel een maandelijks budget in om uitgaven bij te houden en op koers te blijven"
+  }
+}

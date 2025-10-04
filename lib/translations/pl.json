@@ -1,0 +1,130 @@
+{
+  "common": {
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "delete": "Usuń",
+    "edit": "Edytuj",
+    "add": "Dodaj",
+    "loading": "Ładowanie...",
+    "error": "Błąd",
+    "success": "Sukces",
+    "confirm": "Potwierdź",
+    "back": "Wstecz",
+    "next": "Dalej",
+    "finish": "Zakończ"
+  },
+  "auth": {
+    "login": "Zaloguj się",
+    "register": "Zarejestruj się",
+    "email": "E-mail",
+    "password": "Hasło",
+    "confirmPassword": "Potwierdź hasło",
+    "forgotPassword": "Zapomniałeś hasła?",
+    "loginSuccess": "Logowanie udane",
+    "registerSuccess": "Rejestracja udana",
+    "logoutSuccess": "Wylogowanie udane",
+    "invalidCredentials": "Nieprawidłowe dane logowania",
+    "passwordTooShort": "Hasło musi mieć co najmniej 6 znaków",
+    "emailRequired": "E-mail jest wymagany",
+    "passwordsNotMatch": "Hasła nie pasują do siebie"
+  },
+  "navigation": {
+    "dashboard": "Panel główny",
+    "transactions": "Transakcje",
+    "budget": "Budżet",
+    "household": "Gospodarstwo domowe",
+    "settings": "Ustawienia"
+  },
+  "dashboard": {
+    "title": "Panel główny",
+    "monthlyBudget": "Miesięczny budżet",
+    "budgetUsed": "Wykorzystany budżet",
+    "budgetRemaining": "Pozostały budżet",
+    "budgetExceeded": "Budżet przekroczony",
+    "totalIncome": "Całkowity dochód",
+    "totalExpenses": "Całkowite wydatki",
+    "savings": "Oszczędności",
+    "weeklyExpenses": "Tygodniowe wydatki",
+    "weeklySpending": "Tygodniowe wydatki",
+    "recentTransactions": "Ostatnie transakcje",
+    "noBudgetSet": "Nie ustawiono budżetu na ten miesiąc",
+    "setBudget": "Ustaw budżet",
+    "expenseCategories": "Kategorie wydatków"
+  },
+  "transactions": {
+    "title": "Transakcje",
+    "addTransaction": "Dodaj transakcję",
+    "addIncome": "Dodaj dochód",
+    "addExpense": "Dodaj wydatek",
+    "income": "Przychód",
+    "expense": "Wydatek",
+    "amount": "Kwota",
+    "description": "Opis",
+    "category": "Kategoria",
+    "selectCategory": "Wybierz kategorię",
+    "date": "Data",
+    "noTransactions": "Brak transakcji",
+    "transactionAdded": "Transakcja została dodana",
+    "transactionUpdated": "Transakcja została zaktualizowana",
+    "transactionDeleted": "Transakcja została usunięta"
+  },
+  "budget": {
+    "title": "Budżet",
+    "monthlyBudget": "Miesięczny budżet",
+    "setBudget": "Ustaw budżet",
+    "budgetAmount": "Kwota budżetu",
+    "budgetForMonth": "Budżet na {{month}}",
+    "budgetUpdated": "Budżet został zaktualizowany",
+    "currentSpending": "Obecne wydatki",
+    "percentageUsed": "Wykorzystany procent"
+  },
+  "household": {
+    "title": "Gospodarstwo domowe",
+    "createHousehold": "Utwórz gospodarstwo domowe",
+    "joinHousehold": "Dołącz do gospodarstwa domowego",
+    "householdName": "Nazwa gospodarstwa domowego",
+    "inviteCode": "Kod zaproszenia",
+    "members": "Członkowie",
+    "role": "Rola",
+    "admin": "Administrator",
+    "member": "Członek",
+    "leaveHousehold": "Opuść gospodarstwo domowe",
+    "deleteHousehold": "Usuń gospodarstwo domowe",
+    "householdCreated": "Gospodarstwo domowe zostało utworzone",
+    "joinedHousehold": "Dołączono do gospodarstwa domowego",
+    "leftHousehold": "Opuszczono gospodarstwo domowe",
+    "noHousehold": "Nie jesteś członkiem żadnego gospodarstwa domowego"
+  },
+  "settings": {
+    "title": "Ustawienia",
+    "language": "Język",
+    "profile": "Profil",
+    "notifications": "Powiadomienia",
+    "logout": "Wyloguj się",
+    "deleteAccount": "Usuń konto",
+    "confirmLogout": "Czy na pewno chcesz się wylogować?",
+    "confirmDeleteAccount": "Czy na pewno chcesz usunąć swoje konto? Ta akcja jest nieodwracalna."
+  },
+  "categories": {
+    "groceries": "Zakupy spożywcze",
+    "transport": "Transport",
+    "entertainment": "Rozrywka",
+    "utilities": "Media",
+    "healthcare": "Opieka zdrowotna",
+    "shopping": "Zakupy",
+    "salary": "Pensja",
+    "freelance": "Freelancing",
+    "investment": "Inwestycje",
+    "other": "Inne"
+  },
+  "notifications": {
+    "budgetExceeded": "Budżet przekroczony!",
+    "budgetExceededDesc": "Przekroczyłeś miesięczny budżet o {{amount}}",
+    "budgetWarning": "Ostrzeżenie budżetowe!",
+    "budgetWarningDesc": "Wykorzystałeś {{percentage}}% miesięcznego budżetu"
+  },
+  "quickActions": {
+    "title": "Szybkie akcje",
+    "description": "Ustaw miesięczny budżet, aby śledzić wydatki i pozostać na celu"
+  }
+}
