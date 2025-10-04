@@ -9,6 +9,7 @@
     "error": "Fout",
     "success": "Succes",
     "confirm": "Bevestigen",
+    "ok": "OK",
     "back": "Terug",
     "next": "Volgende",
     "finish": "Voltooien"
@@ -41,6 +42,8 @@
     "budgetUsed": "Budget gebruikt",
     "budgetRemaining": "Budget resterend",
     "budgetExceeded": "Budget overschreden",
+    "leftToSpend": "nog te besteden",
+    "overBudgetBy": "budget overschreden met",
     "totalIncome": "Totale inkomsten",
     "totalExpenses": "Totale uitgaven",
     "savings": "Besparingen",
@@ -66,7 +69,12 @@
     "noTransactions": "Nog geen transacties",
     "transactionAdded": "Transactie succesvol toegevoegd",
     "transactionUpdated": "Transactie succesvol bijgewerkt",
-    "transactionDeleted": "Transactie succesvol verwijderd"
+    "transactionDeleted": "Transactie succesvol verwijderd",
+    "deleteConfirmTitle": "Transactie verwijderen",
+    "deleteConfirmMessage": "Wilt u de transactie '{{description}}' echt verwijderen?",
+    "deleteError": "Fout bij het verwijderen van transactie",
+    "transaction": "Transactie",
+    "transactions": "Transacties"
   },
   "budget": {
     "title": "Budget",
@@ -93,7 +101,8 @@
     "householdCreated": "Huishouden succesvol aangemaakt",
     "joinedHousehold": "Succesvol toegetreden tot huishouden",
     "leftHousehold": "Huishouden succesvol verlaten",
-    "noHousehold": "Je bent geen lid van een huishouden"
+    "noHousehold": "Je bent geen lid van een huishouden",
+    "codeShareText": "Deel deze code met familieleden om ze uit te nodigen voor je huishouden"
   },
   "settings": {
     "title": "Instellingen",
@@ -103,7 +112,24 @@
     "logout": "Uitloggen",
     "deleteAccount": "Account verwijderen",
     "confirmLogout": "Weet je zeker dat je wilt uitloggen?",
-    "confirmDeleteAccount": "Weet je zeker dat je je account wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt."
+    "confirmDeleteAccount": "Weet je zeker dat je je account wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+    "dataManagement": "Gegevensbeheer",
+    "deleteData": "Gegevens verwijderen",
+    "deleteDataDescription": "Verwijdert al je transacties, budgetten en categorieën. Je account blijft bestaan.",
+    "deleteDataConfirmation": "Weet je zeker dat je al je gegevens wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+    "deleteAccountDescription": "Verwijdert permanent je hele account en alle bijbehorende gegevens.",
+    "deleteAccountConfirmation": "Weet je zeker dat je je account wilt verwijderen? Alle gegevens worden permanent verwijderd.",
+    "finalWarning": "Laatste waarschuwing",
+    "deleteAccountFinalWarning": "Dit zal je account en ALLE gegevens permanent verwijderen. Deze actie kan NIET ongedaan worden gemaakt.",
+    "deleteAccountFinal": "Account permanent verwijderen",
+    "dataDeletedSuccess": "Je gegevens zijn succesvol verwijderd.",
+    "accountDeletedSuccess": "Je account is succesvol verwijderd.",
+    "deleteDataError": "Fout bij het verwijderen van gegevens. Probeer het opnieuw.",
+    "deleteAccountError": "Fout bij het verwijderen van account. Probeer het opnieuw.",
+    "currency": "Valuta",
+    "selectCurrency": "Valuta selecteren",
+    "currencyChangedSuccess": "Valuta succesvol gewijzigd naar {{currency}}.",
+    "currencyChangeError": "Fout bij het wijzigen van valuta. Probeer het opnieuw."
   },
   "categories": {
     "groceries": "Boodschappen",
@@ -126,5 +152,19 @@
   "quickActions": {
     "title": "Snelle acties",
     "description": "Stel een maandelijks budget in om uitgaven bij te houden en op koers te blijven"
+  },
+  "months": {
+    "january": "Januari",
+    "february": "Februari",
+    "march": "Maart",
+    "april": "April",
+    "may": "Mei",
+    "june": "Juni",
+    "july": "Juli",
+    "august": "Augustus",
+    "september": "September",
+    "october": "Oktober",
+    "november": "November",
+    "december": "December"
   }
 }

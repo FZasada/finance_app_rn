@@ -197,5 +197,20 @@ export const transactionService = {
     });
 
     return weeklyData;
+  },
+
+  // Lösche eine Transaktion
+  async deleteTransaction(transactionId: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', transactionId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error deleting transaction:', error);
+      throw error;
+    }
   }
 };

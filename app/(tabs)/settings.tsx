@@ -1,4 +1,7 @@
+import CurrencyModal from '@/components/CurrencyModal';
+import DeleteDataModal from '@/components/DeleteDataModal';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
@@ -24,9 +27,12 @@ const LANGUAGES = [
 export default function SettingsScreen() {
   const { t, i18n } = useTranslation();
   const { user, signOut } = useAuth();
+  const { currency, setCurrency } = useCurrency();
   const colorScheme = useColorScheme();
 
   const [darkMode, setDarkMode] = React.useState(colorScheme === 'dark');
+  const [showDeleteDataModal, setShowDeleteDataModal] = React.useState(false);
+  const [showCurrencyModal, setShowCurrencyModal] = React.useState(false);
 
   const handleSignOut = () => {
     Alert.alert(
@@ -167,10 +173,8 @@ export default function SettingsScreen() {
             <SettingItem
               icon="card"
               title={t('settings.defaultCurrency')}
-              subtitle="EUR (€)"
-              onPress={() => {
-                Alert.alert('Coming Soon', 'Currency settings will be available in the next update.');
-              }}
+              subtitle={`${currency.flag} ${currency.name} (${currency.symbol})`}
+              onPress={() => setShowCurrencyModal(true)}
             />
             
             <SettingItem
@@ -232,8 +236,28 @@ export default function SettingsScreen() {
             <Ionicons name="log-out" size={20} color="white" />
             <Text style={styles.signOutText}>{t('settings.signOut')}</Text>
           </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.deleteDataButton} 
+            onPress={() => setShowDeleteDataModal(true)}
+          >
+            <Ionicons name="trash" size={20} color="white" />
+            <Text style={styles.deleteDataText}>{t('settings.dataManagement')}</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <DeleteDataModal
+        visible={showDeleteDataModal}
+        onClose={() => setShowDeleteDataModal(false)}
+      />
+
+      <CurrencyModal
+        visible={showCurrencyModal}
+        onClose={() => setShowCurrencyModal(false)}
+        onCurrencyChanged={setCurrency}
+        currentCurrency={currency}
+      />
     </SafeAreaView>
   );
 }
@@ -349,6 +373,21 @@ export default function SettingsScreen() {
     borderRadius: 12,
   },
   signOutText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  deleteDataButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#8E8E93',
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 12,
+  },
+  deleteDataText: {
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',

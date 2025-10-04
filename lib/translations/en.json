@@ -9,6 +9,7 @@
     "error": "Error",
     "success": "Success",
     "confirm": "Confirm",
+    "ok": "OK",
     "back": "Back",
     "next": "Next",
     "finish": "Finish",
@@ -43,6 +44,8 @@
     "budgetUsed": "Budget Used",
     "budgetRemaining": "Budget Remaining",
     "budgetExceeded": "Budget Exceeded",
+    "leftToSpend": "left to spend",
+    "overBudgetBy": "over budget by",
     "totalIncome": "Total Income",
     "totalExpenses": "Total Expenses",
     "savings": "Savings",
@@ -68,7 +71,12 @@
     "noTransactions": "No transactions yet",
     "transactionAdded": "Transaction added successfully",
     "transactionUpdated": "Transaction updated successfully",
-    "transactionDeleted": "Transaction deleted successfully"
+    "transactionDeleted": "Transaction deleted successfully",
+    "deleteConfirmTitle": "Delete Transaction",
+    "deleteConfirmMessage": "Do you really want to delete the transaction '{{description}}'?",
+    "deleteError": "Error deleting transaction",
+    "transaction": "Transaction",
+    "transactions": "Transactions"
   },
   "budget": {
     "title": "Budget",
@@ -95,7 +103,8 @@
     "householdCreated": "Household created successfully",
     "joinedHousehold": "Joined household successfully",
     "leftHousehold": "Left household successfully",
-    "noHousehold": "You are not part of any household"
+    "noHousehold": "You are not part of any household",
+    "codeShareText": "Share this code with family members to invite them to your household"
   },
   "settings": {
     "title": "Settings",
@@ -124,7 +133,24 @@
     "logout": "Logout",
     "deleteAccount": "Delete Account",
     "confirmLogout": "Are you sure you want to logout?",
-    "confirmDeleteAccount": "Are you sure you want to delete your account? This action cannot be undone."
+    "confirmDeleteAccount": "Are you sure you want to delete your account? This action cannot be undone.",
+    "dataManagement": "Data Management",
+    "deleteData": "Delete Data",
+    "deleteDataDescription": "Deletes all your transactions, budgets, and categories. Your account will remain.",
+    "deleteDataConfirmation": "Are you sure you want to delete all your data? This action cannot be undone.",
+    "deleteAccountDescription": "Permanently deletes your entire account and all associated data.",
+    "deleteAccountConfirmation": "Are you sure you want to delete your account? All data will be permanently deleted.",
+    "finalWarning": "Final Warning",
+    "deleteAccountFinalWarning": "This will permanently delete your account and ALL data. This action CANNOT be undone.",
+    "deleteAccountFinal": "Delete Account Permanently",
+    "dataDeletedSuccess": "Your data has been successfully deleted.",
+    "accountDeletedSuccess": "Your account has been successfully deleted.",
+    "deleteDataError": "Error deleting data. Please try again.",
+    "deleteAccountError": "Error deleting account. Please try again.",
+    "currency": "Currency",
+    "selectCurrency": "Select Currency",
+    "currencyChangedSuccess": "Currency successfully changed to {{currency}}.",
+    "currencyChangeError": "Error changing currency. Please try again."
   },
   "categories": {
     "groceries": "Groceries",
@@ -152,6 +178,20 @@
   },
   "quickActions": {
     "title": "Quick Actions",
-    "description": "Set a monthly budget to track your spending and stay on target"
+    "description": "Set budget for this month and track spending goals"
+  },
+  "months": {
+    "january": "January",
+    "february": "February",
+    "march": "March",
+    "april": "April",
+    "may": "May",
+    "june": "June",
+    "july": "July",
+    "august": "August",
+    "september": "September",
+    "october": "October",
+    "november": "November",
+    "december": "December"
   }
 }

@@ -9,6 +9,7 @@
     "error": "Błąd",
     "success": "Sukces",
     "confirm": "Potwierdź",
+    "ok": "OK",
     "back": "Wstecz",
     "next": "Dalej",
     "finish": "Zakończ"
@@ -41,6 +42,8 @@
     "budgetUsed": "Wykorzystany budżet",
     "budgetRemaining": "Pozostały budżet",
     "budgetExceeded": "Budżet przekroczony",
+    "leftToSpend": "pozostało do wydania",
+    "overBudgetBy": "przekroczono budżet o",
     "totalIncome": "Całkowity dochód",
     "totalExpenses": "Całkowite wydatki",
     "savings": "Oszczędności",
@@ -66,7 +69,12 @@
     "noTransactions": "Brak transakcji",
     "transactionAdded": "Transakcja została dodana",
     "transactionUpdated": "Transakcja została zaktualizowana",
-    "transactionDeleted": "Transakcja została usunięta"
+    "transactionDeleted": "Transakcja została usunięta",
+    "deleteConfirmTitle": "Usuń transakcję",
+    "deleteConfirmMessage": "Czy na pewno chcesz usunąć transakcję '{{description}}'?",
+    "deleteError": "Błąd podczas usuwania transakcji",
+    "transaction": "Transakcja",
+    "transactions": "Transakcje"
   },
   "budget": {
     "title": "Budżet",
@@ -93,7 +101,8 @@
     "householdCreated": "Gospodarstwo domowe zostało utworzone",
     "joinedHousehold": "Dołączono do gospodarstwa domowego",
     "leftHousehold": "Opuszczono gospodarstwo domowe",
-    "noHousehold": "Nie jesteś członkiem żadnego gospodarstwa domowego"
+    "noHousehold": "Nie jesteś członkiem żadnego gospodarstwa domowego",
+    "codeShareText": "Podziel się tym kodem z członkami rodziny, aby zaprosić ich do swojego gospodarstwa domowego"
   },
   "settings": {
     "title": "Ustawienia",
@@ -103,7 +112,24 @@
     "logout": "Wyloguj się",
     "deleteAccount": "Usuń konto",
     "confirmLogout": "Czy na pewno chcesz się wylogować?",
-    "confirmDeleteAccount": "Czy na pewno chcesz usunąć swoje konto? Ta akcja jest nieodwracalna."
+    "confirmDeleteAccount": "Czy na pewno chcesz usunąć swoje konto? Ta akcja jest nieodwracalna.",
+    "dataManagement": "Zarządzanie danymi",
+    "deleteData": "Usuń dane",
+    "deleteDataDescription": "Usuwa wszystkie transakcje, budżety i kategorie. Twoje konto pozostanie.",
+    "deleteDataConfirmation": "Czy na pewno chcesz usunąć wszystkie dane? Ta akcja jest nieodwracalna.",
+    "deleteAccountDescription": "Trwale usuwa całe konto i wszystkie powiązane dane.",
+    "deleteAccountConfirmation": "Czy na pewno chcesz usunąć konto? Wszystkie dane zostaną trwale usunięte.",
+    "finalWarning": "Ostatnie ostrzeżenie",
+    "deleteAccountFinalWarning": "To trwale usunie Twoje konto i WSZYSTKIE dane. Ta akcja NIE MOŻE być cofnięta.",
+    "deleteAccountFinal": "Usuń konto na stałe",
+    "dataDeletedSuccess": "Twoje dane zostały pomyślnie usunięte.",
+    "accountDeletedSuccess": "Twoje konto zostało pomyślnie usunięte.",
+    "deleteDataError": "Błąd podczas usuwania danych. Spróbuj ponownie.",
+    "deleteAccountError": "Błąd podczas usuwania konta. Spróbuj ponownie.",
+    "currency": "Waluta",
+    "selectCurrency": "Wybierz walutę",
+    "currencyChangedSuccess": "Waluta została pomyślnie zmieniona na {{currency}}.",
+    "currencyChangeError": "Błąd podczas zmiany waluty. Spróbuj ponownie."
   },
   "categories": {
     "groceries": "Zakupy spożywcze",
@@ -126,5 +152,19 @@
   "quickActions": {
     "title": "Szybkie akcje",
     "description": "Ustaw miesięczny budżet, aby śledzić wydatki i pozostać na celu"
+  },
+  "months": {
+    "january": "Styczeń",
+    "february": "Luty",
+    "march": "Marzec",
+    "april": "Kwiecień",
+    "may": "Maj",
+    "june": "Czerwiec",
+    "july": "Lipiec",
+    "august": "Sierpień",
+    "september": "Wrzesień",
+    "october": "Październik",
+    "november": "Listopad",
+    "december": "Grudzień"
   }
 }

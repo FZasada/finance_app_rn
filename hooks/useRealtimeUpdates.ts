@@ -48,11 +48,11 @@ export function useRealtimeUpdates(options: UseRealtimeUpdatesOptions = {}) {
             switch (update.type) {
               case 'INSERT':
                 title = isIncome ? '💰 New Income Added' : '💸 New Expense Added';
-                body = `€${amount} - ${update.record.description || 'No description'}`;
+                body = `${amount} € - ${update.record.description || 'No description'}`;
                 break;
               case 'UPDATE':
                 title = '✏️ Transaction Updated';
-                body = `Updated to €${amount} - ${update.record.description || 'No description'}`;
+                body = `Updated to ${amount} € - ${update.record.description || 'No description'}`;
                 break;
               case 'DELETE':
                 title = '🗑️ Transaction Deleted';
@@ -86,11 +86,11 @@ export function useRealtimeUpdates(options: UseRealtimeUpdatesOptions = {}) {
             switch (update.type) {
               case 'INSERT':
                 title = '📊 Budget Set';
-                body = `Monthly budget of €${update.record.amount} was set`;
+                body = `Monthly budget of ${update.record.amount} € was set`;
                 break;
               case 'UPDATE':
                 title = '📊 Budget Updated';
-                body = `Monthly budget updated to €${update.record.amount}`;
+                body = `Monthly budget updated to ${update.record.amount} €`;
                 break;
               case 'DELETE':
                 title = '📊 Budget Removed';

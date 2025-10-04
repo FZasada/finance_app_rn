@@ -281,7 +281,7 @@ export default function HouseholdScreen() {
               </TouchableOpacity>
             </View>
             <Text style={styles.inviteHint}>
-              Share this code with family members to invite them to your household
+              {t('household.codeShareText')}
             </Text>
           </View>
         </View>

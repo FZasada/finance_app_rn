@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { AuthProvider } from '@/contexts/AuthContext';
+import { CurrencyProvider } from '@/contexts/CurrencyContext';
 import { HouseholdProvider } from '@/contexts/HouseholdContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import '@/lib/i18n';
@@ -19,12 +20,14 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <AuthProvider>
         <HouseholdProvider>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-            <Stack.Screen name="auth" options={{ headerShown: false }} />
-          </Stack>
-          <StatusBar style="auto" />
+          <CurrencyProvider>
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+              <Stack.Screen name="auth" options={{ headerShown: false }} />
+            </Stack>
+            <StatusBar style="auto" />
+          </CurrencyProvider>
         </HouseholdProvider>
       </AuthProvider>
     </ThemeProvider>

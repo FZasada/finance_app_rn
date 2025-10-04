@@ -1,14 +1,18 @@
 import AddTransactionModal from '@/components/AddTransactionModal';
+import CollapsibleMonthSection from '@/components/CollapsibleMonthSection';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { useHousehold } from '@/contexts/HouseholdContext';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 import { supabase, Transaction } from '@/lib/supabase';
+import { transactionService } from '@/lib/transactionService';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    FlatList,
+    Alert,
     RefreshControl,
+    ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -16,8 +20,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-interface TransactionWithCategory extends Transaction {
-  categories?: {
+interface TransactionWithCategory extends Omit<Transaction, 'category'> {
+  category?: {
     name: string;
     color: string;
     icon: string;
@@ -28,6 +32,7 @@ export default function TransactionsScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { household } = useHousehold();
+  const { getCurrencySymbol } = useCurrency();
   
   const [transactions, setTransactions] = useState<TransactionWithCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,7 +48,7 @@ export default function TransactionsScreen() {
         .from('transactions')
         .select(`
           *,
-          categories(name, color, icon)
+          category:categories(name, color, icon)
         `)
         .eq('household_id', household.id)
         .order('date', { ascending: false })
@@ -51,6 +56,12 @@ export default function TransactionsScreen() {
 
       if (error) throw error;
       console.log('Loaded transactions count:', data?.length || 0);
+      console.log('Sample transaction with category:', data?.[0] ? {
+        id: data[0].id,
+        description: data[0].description,
+        category_id: data[0].category_id,
+        category: data[0].category
+      } : 'No transactions');
       setTransactions(data || []);
     } catch (error) {
       console.error('Error loading transactions:', error);
@@ -83,6 +94,77 @@ export default function TransactionsScreen() {
     }, 100);
   }, [loadTransactions]);
 
+  const handleDeleteTransaction = useCallback(async (transactionId: string, description: string) => {
+    Alert.alert(
+      t('transactions.deleteConfirmTitle'),
+      t('transactions.deleteConfirmMessage', { description }),
+      [
+        {
+          text: t('common.cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await transactionService.deleteTransaction(transactionId);
+              loadTransactions(); // Reload transactions after deletion
+            } catch (error) {
+              Alert.alert(
+                t('common.error'),
+                t('transactions.deleteError')
+              );
+            }
+          },
+        },
+      ]
+    );
+  }, [loadTransactions, t]);
+
+  // Group transactions by month and year
+  const groupedTransactions = useCallback(() => {
+    const groups: { [key: string]: {
+      month: string;
+      year: number;
+      transactions: TransactionWithCategory[];
+      totalAmount: number;
+    } } = {};
+
+    transactions.forEach(transaction => {
+      const date = new Date(transaction.date);
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      const key = `${year}-${month}`;
+
+      if (!groups[key]) {
+        groups[key] = {
+          month,
+          year,
+          transactions: [],
+          totalAmount: 0,
+        };
+      }
+
+      groups[key].transactions.push(transaction);
+      // Calculate net amount (income - expenses)
+      const amount = transaction.type === 'income' ? transaction.amount : -transaction.amount;
+      groups[key].totalAmount += amount;
+    });
+
+    // Convert to array and sort by date (newest first)
+    return Object.entries(groups)
+      .map(([key, group]) => ({
+        key,
+        ...group,
+      }))
+      .sort((a, b) => {
+        const dateA = new Date(a.year, parseInt(a.month) - 1);
+        const dateB = new Date(b.year, parseInt(b.month) - 1);
+        return dateB.getTime() - dateA.getTime();
+      });
+  }, [transactions]);
+
   const handleRefresh = () => {
     setRefreshing(true);
     loadTransactions();
@@ -99,7 +181,7 @@ export default function TransactionsScreen() {
 
   const formatAmount = (amount: number, type: 'income' | 'expense') => {
     const prefix = type === 'income' ? '+' : '-';
-    return `${prefix}€${amount.toFixed(2)}`;
+    return `${prefix}${amount.toFixed(2)} ${getCurrencySymbol()}`;
   };
 
   const getTransactionIcon = (type: string, category?: { name: string; icon: string }) => {
@@ -113,10 +195,10 @@ export default function TransactionsScreen() {
     <View style={styles.transactionItem}>
       <View style={[
         styles.transactionIcon,
-        { backgroundColor: item.categories?.color || (item.type === 'income' ? '#28A745' : '#FF3B30') }
+        { backgroundColor: item.category?.color || (item.type === 'income' ? '#28A745' : '#FF3B30') }
       ]}>
         <Ionicons
-          name={getTransactionIcon(item.type, item.categories)}
+          name={getTransactionIcon(item.type, item.category)}
           size={24}
           color="white"
         />
@@ -126,45 +208,27 @@ export default function TransactionsScreen() {
         <Text style={styles.transactionDescription}>{item.description}</Text>
         <View style={styles.transactionMeta}>
           <Text style={styles.transactionCategory}>
-            {item.categories?.name ? t(`categories.${item.categories.name}`) : t('categories.other')}
+            {item.category?.name ? t(`categories.${item.category.name}`) : t('categories.other')}
           </Text>
           <Text style={styles.transactionDate}>{formatDate(item.date)}</Text>
         </View>
       </View>
       
-      <Text style={[
-        styles.transactionAmount,
-        { color: item.type === 'income' ? '#28A745' : '#FF3B30' }
-      ]}>
-        {formatAmount(item.amount, item.type)}
-      </Text>
-    </View>
-  );  const renderTransaction = ({ item }: { item: TransactionWithCategory }) => (
-    <View style={styles.transactionItem}>
-      <View style={styles.transactionIcon}>
-        <Ionicons
-          name={getTransactionIcon(item.type, item.category)}
-          size={24}
-          color={item.type === 'income' ? '#28A745' : '#FF3B30'}
-        />
+      <View style={styles.transactionRight}>
+        <Text style={[
+          styles.transactionAmount,
+          { color: item.type === 'income' ? '#28A745' : '#FF3B30' }
+        ]}>
+          {formatAmount(item.amount, item.type)}
+        </Text>
+        
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => handleDeleteTransaction(item.id, item.description)}
+        >
+          <Ionicons name="trash-outline" size={20} color="#FF3B30" />
+        </TouchableOpacity>
       </View>
-      
-      <View style={styles.transactionDetails}>
-        <Text style={styles.transactionDescription}>{item.description}</Text>
-        <View style={styles.transactionMeta}>
-          <Text style={styles.transactionCategory}>
-            {t(`categories.${item.category || 'other'}`)}
-          </Text>
-          <Text style={styles.transactionDate}>{formatDate(item.date)}</Text>
-        </View>
-      </View>
-      
-      <Text style={[
-        styles.transactionAmount,
-        { color: item.type === 'income' ? '#28A745' : '#FF3B30' }
-      ]}>
-        {formatAmount(item.amount, item.type)}
-      </Text>
     </View>
   );
 
@@ -196,10 +260,7 @@ export default function TransactionsScreen() {
       {transactions.length === 0 && !loading ? (
         <EmptyState />
       ) : (
-        <FlatList
-          data={transactions}
-          renderItem={renderTransaction}
-          keyExtractor={(item) => item.id}
+        <ScrollView
           style={styles.list}
           contentContainerStyle={styles.listContent}
           refreshControl={
@@ -210,7 +271,22 @@ export default function TransactionsScreen() {
             />
           }
           showsVerticalScrollIndicator={false}
-        />
+        >
+          {groupedTransactions().map((group, index) => (
+            <CollapsibleMonthSection
+              key={group.key}
+              month={group.month}
+              year={group.year}
+              transactionCount={group.transactions.length}
+              totalAmount={group.totalAmount}
+              isInitiallyExpanded={index === 0} // Only expand the first (most recent) month
+            >
+              {group.transactions.map((transaction) => (
+                <TransactionItem key={transaction.id} item={transaction} />
+              ))}
+            </CollapsibleMonthSection>
+          ))}
+        </ScrollView>
       )}
 
       <AddTransactionModal
@@ -284,21 +360,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContent: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingHorizontal: 16,
+    paddingBottom: 20,
   },
   transactionItem: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'white',
     padding: 16,
-    marginBottom: 8,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
   transactionIcon: {
     width: 48,
@@ -331,9 +402,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
+  transactionRight: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
   transactionAmount: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginLeft: 12,
+    marginBottom: 8,
+  },
+  deleteButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#FFEBEE',
   },
 });

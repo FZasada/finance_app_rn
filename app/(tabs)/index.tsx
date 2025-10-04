@@ -1,6 +1,7 @@
 import AddTransactionModal from '@/components/AddTransactionModal';
 import SetBudgetModal from '@/components/SetBudgetModal';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { useHousehold } from '@/contexts/HouseholdContext';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 import { supabase } from '@/lib/supabase';
@@ -42,6 +43,7 @@ export default function DashboardScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { household } = useHousehold();
+  const { formatAmount, getCurrencySymbol } = useCurrency();
   
   const [dashboardData, setDashboardData] = useState<DashboardData>({
     monthlyBudget: 0,
@@ -155,14 +157,17 @@ export default function DashboardScreen() {
     ],
     legend: [t('dashboard.weeklyExpenses')]
   };    // Mock data for charts - replace with real data later
+  // Create custom formatted data for pie chart with € symbol
   const expenseData = dashboardData.expensesByCategory.length > 0 
-    ? dashboardData.expensesByCategory.map(cat => ({
-        name: cat.categoryName,
-        amount: cat.amount,
-        color: cat.color,
-        legendFontColor: '#7F7F7F',
-        legendFontSize: 14,
-      }))
+    ? dashboardData.expensesByCategory.map(cat => {
+        return {
+          name: cat.categoryName, // Just category name for the chart
+          amount: cat.amount,
+          color: cat.color,
+          legendFontColor: '#7F7F7F',
+          legendFontSize: 14,
+        };
+      })
     : [
         {
           name: 'No Data',
@@ -196,7 +201,9 @@ export default function DashboardScreen() {
         {/* Budget Overview */}
         <View style={styles.budgetCard}>
           <View style={styles.budgetHeader}>
-            <Text style={styles.cardTitle}>{t('dashboard.monthlyBudget')}</Text>
+            <Text style={styles.cardTitle}>
+              {isOverBudget ? t('dashboard.budgetExceeded') : t('dashboard.budgetRemaining')}
+            </Text>
             <TouchableOpacity 
               style={styles.setBudgetButton}
               onPress={() => setShowBudgetModal(true)}
@@ -209,7 +216,18 @@ export default function DashboardScreen() {
           
           {dashboardData.monthlyBudget > 0 ? (
             <>
-              <Text style={styles.budgetAmount}>€{dashboardData.monthlyBudget}</Text>
+              {/* Main Budget Remaining Display */}
+              <View style={styles.mainBudgetDisplay}>
+                <Text style={[
+                  styles.remainingAmount,
+                  { color: isOverBudget ? '#FF3B30' : '#28A745' }
+                ]}>
+                  {isOverBudget ? '-' : ''}{Math.abs(budgetRemaining).toFixed(2)} {getCurrencySymbol()}
+                </Text>
+                <Text style={styles.remainingText}>
+                  {isOverBudget ? t('dashboard.overBudgetBy') : t('dashboard.leftToSpend')}
+                </Text>
+              </View>
               
               <View style={styles.budgetProgress}>
                 <View style={styles.progressBar}>
@@ -230,17 +248,13 @@ export default function DashboardScreen() {
 
               <View style={styles.budgetStats}>
                 <View style={styles.statItem}>
-                  <Text style={styles.statLabel}>{t('dashboard.budgetUsed')}</Text>
-                  <Text style={[styles.statValue, isOverBudget && styles.overBudgetText]}>
-                    €{dashboardData.spent}
-                  </Text>
+                  <Text style={styles.statLabel}>{t('dashboard.monthlyBudget')}</Text>
+                  <Text style={styles.statValue}>{dashboardData.monthlyBudget} {getCurrencySymbol()}</Text>
                 </View>
                 <View style={styles.statItem}>
-                  <Text style={styles.statLabel}>
-                    {isOverBudget ? t('dashboard.budgetExceeded') : t('dashboard.budgetRemaining')}
-                  </Text>
+                  <Text style={styles.statLabel}>{t('dashboard.budgetUsed')}</Text>
                   <Text style={[styles.statValue, isOverBudget && styles.overBudgetText]}>
-                    €{Math.abs(budgetRemaining)}
+                    {dashboardData.spent} {getCurrencySymbol()}
                   </Text>
                 </View>
               </View>
@@ -259,11 +273,11 @@ export default function DashboardScreen() {
         <View style={styles.statsRow}>
           <View style={[styles.statCard, { marginRight: 10 }]}>
             <Text style={styles.cardTitle}>{t('dashboard.totalIncome')}</Text>
-            <Text style={[styles.statValue, { color: '#28A745' }]}>€{dashboardData.income}</Text>
+            <Text style={[styles.statValue, { color: '#28A745' }]}>{dashboardData.income} {getCurrencySymbol()}</Text>
           </View>
           <View style={[styles.statCard, { marginLeft: 10 }]}>
             <Text style={styles.cardTitle}>{t('dashboard.savings')}</Text>
-            <Text style={[styles.statValue, { color: '#28A745' }]}>€{dashboardData.savings}</Text>
+            <Text style={[styles.statValue, { color: '#28A745' }]}>{dashboardData.savings} {getCurrencySymbol()}</Text>
           </View>
         </View>
 
@@ -301,15 +315,34 @@ export default function DashboardScreen() {
           <PieChart
             data={expenseData}
             width={screenWidth - 60}
-            height={220}
+            height={200}
             chartConfig={{
               color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+              decimalPlaces: 0,
+              propsForLabels: {
+                fontSize: 12,
+              },
             }}
             accessor="amount"
             backgroundColor="transparent"
             paddingLeft="15"
-            absolute
+            absolute={false}
+            hasLegend={false}
+            avoidFalseZero={true}
+            center={[60, 0]}
           />
+          
+          {/* Custom Legend */}
+                    <View style={styles.customLegend}>
+            {dashboardData.expensesByCategory.map((item, index) => (
+              <View key={`${item.categoryName}_${index}`} style={styles.legendItem}>
+                <View style={[styles.legendColor, { backgroundColor: item.color }]} />
+                <Text style={styles.legendText}>
+                  {formatAmount(item.amount)} {item.categoryName}
+                </Text>
+              </View>
+            ))}
+          </View>
         </View>
 
         {/* Quick Actions */}
@@ -405,8 +438,23 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 10,
   },
+  mainBudgetDisplay: {
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingVertical: 10,
+  },
+  remainingAmount: {
+    fontSize: 42,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  remainingText: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '500',
+  },
   budgetAmount: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 15,
@@ -523,5 +571,28 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  customLegend: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    paddingTop: 10,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 15,
+    marginBottom: 8,
+  },
+  legendColor: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 6,
+  },
+  legendText: {
+    fontSize: 12,
+    color: '#7F7F7F',
   },
 });

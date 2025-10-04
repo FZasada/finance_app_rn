@@ -9,6 +9,7 @@
     "error": "Fehler",
     "success": "Erfolg",
     "confirm": "Bestätigen",
+    "ok": "OK",
     "back": "Zurück",
     "next": "Weiter",
     "finish": "Fertig",
@@ -43,6 +44,8 @@
     "budgetUsed": "Budget verwendet",
     "budgetRemaining": "Budget übrig",
     "budgetExceeded": "Budget überschritten",
+    "leftToSpend": "noch verfügbar",
+    "overBudgetBy": "Budget überschritten um",
     "totalIncome": "Gesamteinkommen",
     "totalExpenses": "Gesamtausgaben",
     "savings": "Ersparnisse",
@@ -68,7 +71,12 @@
     "noTransactions": "Noch keine Transaktionen",
     "transactionAdded": "Transaktion erfolgreich hinzugefügt",
     "transactionUpdated": "Transaktion erfolgreich aktualisiert",
-    "transactionDeleted": "Transaktion erfolgreich gelöscht"
+    "transactionDeleted": "Transaktion erfolgreich gelöscht",
+    "deleteConfirmTitle": "Transaktion löschen",
+    "deleteConfirmMessage": "Möchten Sie die Transaktion '{{description}}' wirklich löschen?",
+    "deleteError": "Fehler beim Löschen der Transaktion",
+    "transaction": "Transaktion",
+    "transactions": "Transaktionen"
   },
   "budget": {
     "title": "Budget",
@@ -95,7 +103,8 @@
     "householdCreated": "Haushalt erfolgreich erstellt",
     "joinedHousehold": "Haushalt erfolgreich beigetreten",
     "leftHousehold": "Haushalt erfolgreich verlassen",
-    "noHousehold": "Sie sind Teil keines Haushalts"
+    "noHousehold": "Sie sind Teil keines Haushalts",
+    "codeShareText": "Teilen Sie diesen Code mit Familienmitgliedern, um sie zu Ihrem Haushalt einzuladen"
   },
   "settings": {
     "title": "Einstellungen",
@@ -124,7 +133,24 @@
     "logout": "Abmelden",
     "deleteAccount": "Konto löschen",
     "confirmLogout": "Sind Sie sicher, dass Sie sich abmelden möchten?",
-    "confirmDeleteAccount": "Sind Sie sicher, dass Sie Ihr Konto löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
+    "confirmDeleteAccount": "Sind Sie sicher, dass Sie Ihr Konto löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "dataManagement": "Datenverwaltung",
+    "deleteData": "Daten löschen",
+    "deleteDataDescription": "Löscht alle Ihre Transaktionen, Budgets und Kategorien. Ihr Konto bleibt bestehen.",
+    "deleteDataConfirmation": "Sind Sie sicher, dass Sie alle Ihre Daten löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "deleteAccountDescription": "Löscht Ihr gesamtes Konto und alle damit verbundenen Daten permanent.",
+    "deleteAccountConfirmation": "Sind Sie sicher, dass Sie Ihr Konto löschen möchten? Alle Daten werden permanent gelöscht.",
+    "finalWarning": "Letzte Warnung",
+    "deleteAccountFinalWarning": "Dies wird Ihr Konto und ALLE Daten permanent löschen. Diese Aktion kann NICHT rückgängig gemacht werden.",
+    "deleteAccountFinal": "Konto endgültig löschen",
+    "dataDeletedSuccess": "Ihre Daten wurden erfolgreich gelöscht.",
+    "accountDeletedSuccess": "Ihr Konto wurde erfolgreich gelöscht.",
+    "deleteDataError": "Fehler beim Löschen der Daten. Bitte versuchen Sie es erneut.",
+    "deleteAccountError": "Fehler beim Löschen des Kontos. Bitte versuchen Sie es erneut.",
+    "currency": "Währung",
+    "selectCurrency": "Währung auswählen",
+    "currencyChangedSuccess": "Währung wurde erfolgreich zu {{currency}} geändert.",
+    "currencyChangeError": "Fehler beim Ändern der Währung. Bitte versuchen Sie es erneut."
   },
   "categories": {
     "groceries": "Lebensmittel",
@@ -153,5 +179,19 @@
   "quickActions": {
     "title": "Schnellaktionen",
     "description": "Budget für diesen Monat festlegen und Ausgabenziele verfolgen"
+  },
+  "months": {
+    "january": "Januar",
+    "february": "Februar",
+    "march": "März",
+    "april": "April",
+    "may": "Mai",
+    "june": "Juni",
+    "july": "Juli",
+    "august": "August",
+    "september": "September",
+    "october": "Oktober",
+    "november": "November",
+    "december": "Dezember"
   }
 }

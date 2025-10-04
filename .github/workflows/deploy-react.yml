@@ -1,0 +1,55 @@
+name: Deploy React App to GitHub Pages
+
+# Alternative workflow for standard React apps
+# Use this if you convert your React Native app to a standard React web app
+
+on:
+  push:
+    tags:
+      - 'v*' # Triggers on tags like v1.0.0, v2.1.3, etc.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build React app
+        run: npm run build
+        env:
+          NODE_ENV: production
+          # Set the homepage for GitHub Pages
+          PUBLIC_URL: /finanzen-app
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build
+          publish_branch: gh-pages
+          force_orphan: true
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: 'Deploy ${{ github.ref_name }} to GitHub Pages'
+          # cname: your-domain.com # Uncomment and add your custom domain if you have one

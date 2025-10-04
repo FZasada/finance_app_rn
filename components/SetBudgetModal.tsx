@@ -1,4 +1,5 @@
 import { useAuth } from '@/contexts/AuthContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { useHousehold } from '@/contexts/HouseholdContext';
 import { supabase } from '@/lib/supabase';
 import React, { useState } from 'react';
@@ -29,7 +30,8 @@ export default function SetBudgetModal({
   const { t } = useTranslation();
   const { user } = useAuth();
   const { household } = useHousehold();
-  const [amount, setAmount] = useState(currentBudget.toString());
+  const { getCurrencySymbol } = useCurrency();
+  const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
@@ -147,7 +149,7 @@ export default function SetBudgetModal({
           <View style={styles.inputSection}>
             <Text style={styles.inputLabel}>{t('budget.budgetAmount')}</Text>
             <View style={styles.amountInputContainer}>
-              <Text style={styles.currencySymbol}>€</Text>
+              <Text style={styles.currencySymbol}>{getCurrencySymbol()}</Text>
               <TextInput
                 style={styles.amountInput}
                 value={amount}
@@ -163,7 +165,7 @@ export default function SetBudgetModal({
           {currentBudget > 0 && (
             <View style={styles.currentBudgetInfo}>
               <Text style={styles.currentBudgetLabel}>
-                Current Budget: €{currentBudget}
+                Current Budget: {currentBudget} {getCurrencySymbol()}
               </Text>
             </View>
           )}

@@ -160,11 +160,11 @@ class RealtimeService {
       switch (update.type) {
         case 'INSERT':
           title = 'New Transaction Added';
-          body = `${update.record.type === 'income' ? 'Income' : 'Expense'} of €${Math.abs(update.record.amount)} was added`;
+          body = `${update.record.type === 'income' ? 'Income' : 'Expense'} of ${Math.abs(update.record.amount)} € was added`;
           break;
         case 'UPDATE':
           title = 'Transaction Updated';
-          body = `A transaction was updated to €${Math.abs(update.record.amount)}`;
+          body = `A transaction was updated to ${Math.abs(update.record.amount)} €`;
           break;
         case 'DELETE':
           title = 'Transaction Deleted';
@@ -185,11 +185,11 @@ class RealtimeService {
       switch (update.type) {
         case 'INSERT':
           title = 'Budget Set';
-          body = `Monthly budget of €${update.record.amount} was set`;
+          body = `Monthly budget of ${update.record.amount} € was set`;
           break;
         case 'UPDATE':
           title = 'Budget Updated';
-          body = `Monthly budget was updated to €${update.record.amount}`;
+          body = `Monthly budget was updated to ${update.record.amount} €`;
           break;
         case 'DELETE':
           title = 'Budget Removed';

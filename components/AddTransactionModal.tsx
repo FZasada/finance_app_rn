@@ -1,4 +1,5 @@
 import { useAuth } from '@/contexts/AuthContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { useHousehold } from '@/contexts/HouseholdContext';
 import { categoryService } from '@/lib/categoryService';
 import { supabase, type Category } from '@/lib/supabase';
@@ -33,6 +34,7 @@ export default function AddTransactionModal({
   const { t } = useTranslation();
   const { user } = useAuth();
   const { household } = useHousehold();
+  const { getCurrencySymbol } = useCurrency();
   
   const [type, setType] = useState<'income' | 'expense'>(initialType);
   const [amount, setAmount] = useState('');
@@ -197,7 +199,7 @@ export default function AddTransactionModal({
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('transactions.amount')}</Text>
             <View style={styles.amountContainer}>
-              <Text style={styles.currencySymbol}>€</Text>
+              <Text style={styles.currencySymbol}>{getCurrencySymbol()}</Text>
               <TextInput
                 style={styles.amountInput}
                 value={amount}
