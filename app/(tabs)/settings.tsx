@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Ionicons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -29,6 +30,9 @@ export default function SettingsScreen() {
   const { user, signOut } = useAuth();
   const { currency, setCurrency } = useCurrency();
   const colorScheme = useColorScheme();
+  
+  // Get app version from expo constants
+  const appVersion = Constants.expoConfig?.version || '1.0.0';
 
   const [darkMode, setDarkMode] = React.useState(colorScheme === 'dark');
   const [showDeleteDataModal, setShowDeleteDataModal] = React.useState(false);
@@ -222,9 +226,9 @@ export default function SettingsScreen() {
             <SettingItem
               icon="information-circle"
               title={t('settings.about')}
-              subtitle="Version 1.0.0"
+              subtitle={`Version ${appVersion}`}
               onPress={() => {
-                Alert.alert('About', 'Finance App v1.0.0\nBuilt with React Native and Supabase');
+                Alert.alert('About', `Finance App v${appVersion}\nBuilt with React Native and Supabase`);
               }}
             />
           </View>
