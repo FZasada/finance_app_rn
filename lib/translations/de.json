@@ -51,10 +51,15 @@
     "savings": "Ersparnisse",
     "weeklyExpenses": "Wöchentliche Ausgaben",
     "weeklySpending": "Wöchentliche Ausgaben",
+    "weeklyBudgetSpending": "Wöchentliche Budgetausgaben",
+    "weeklyBudgetExpenses": "Wöchentliche Budgetausgaben",
     "recentTransactions": "Letzte Transaktionen",
     "noBudgetSet": "Kein Budget für diesen Monat festgelegt",
     "setBudget": "Budget festlegen",
-    "expenseCategories": "Ausgabenkategorien"
+    "expenseCategories": "Ausgabenkategorien",
+    "fixedCosts": "Fixkosten",
+    "netBalance": "Nettobilanz",
+    "forMonth": "für"
   },
   "transactions": {
     "title": "Transaktionen",

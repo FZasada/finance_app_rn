@@ -199,6 +199,166 @@ export const transactionService = {
     return weeklyData;
   },
 
+  /**
+   * Get budget analysis with separation of fixed costs and budget-relevant expenses
+   */
+  async getBudgetAnalysis(year: number, month: number, householdId?: string): Promise<{
+    totalIncome: number;
+    totalExpenses: number;
+    fixedCosts: number;
+    budgetRelevantExpenses: number;
+    netBalance: number;
+    budgetRelevantByCategory: {
+      categoryName: string;
+      amount: number;
+      color: string;
+      percentage: number;
+    }[];
+  }> {
+    const transactions = await this.getTransactionsForMonth(year, month, householdId);
+    
+    const income = transactions
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + t.amount, 0);
+    
+    const expenses = transactions.filter(t => t.type === 'expense');
+    const totalExpenses = expenses.reduce((sum, t) => sum + t.amount, 0);
+    
+    // Separate fixed costs from budget-relevant expenses
+    // Fixed costs are typically: rent, insurance, subscriptions, etc.
+    // Support both English and German category names
+    const fixedCostCategories = [
+      'rent', 'miete', 'housing', 'wohnung',
+      'insurance', 'versicherung', 
+      'utilities', 'strom', 'gas', 'wasser', 'internet',
+      'subscription', 'abo', 'abonnement',
+      'loan', 'kredit', 'darlehen',
+      'mortgage', 'hypothek'
+    ];
+    
+    const fixedCosts = expenses
+      .filter(t => {
+        const categoryName = t.category?.name?.toLowerCase() || '';
+        return fixedCostCategories.some(fixed => categoryName.includes(fixed));
+      })
+      .reduce((sum, t) => sum + t.amount, 0);
+    
+    const budgetRelevantExpenses = totalExpenses - fixedCosts;
+    
+    // Get budget-relevant expenses by category
+    const budgetRelevantTransactions = expenses.filter(t => {
+      const categoryName = t.category?.name?.toLowerCase() || '';
+      return !fixedCostCategories.some(fixed => categoryName.includes(fixed));
+    });
+    
+    const categoryMap = new Map<string, { amount: number; color: string; name: string }>();
+    
+    budgetRelevantTransactions.forEach(transaction => {
+      const categoryName = transaction.category?.name || 'other';
+      const categoryColor = transaction.category?.color || '#B0B0B0';
+      const displayName = transaction.category?.name || 'Other';
+      
+      if (categoryMap.has(categoryName)) {
+        categoryMap.get(categoryName)!.amount += transaction.amount;
+      } else {
+        categoryMap.set(categoryName, {
+          amount: transaction.amount,
+          color: categoryColor,
+          name: displayName
+        });
+      }
+    });
+
+    const budgetRelevantByCategory = Array.from(categoryMap.entries()).map(([_, data]) => ({
+      categoryName: data.name,
+      amount: data.amount,
+      color: data.color,
+      percentage: budgetRelevantExpenses > 0 ? (data.amount / budgetRelevantExpenses) * 100 : 0
+    })).sort((a, b) => b.amount - a.amount);
+
+    return {
+      totalIncome: income,
+      totalExpenses,
+      fixedCosts,
+      budgetRelevantExpenses,
+      netBalance: income - totalExpenses,
+      budgetRelevantByCategory
+    };
+  },
+
+  /**
+   * Get weekly budget-relevant expenses for the current week
+   */
+  async getWeeklyBudgetExpenses(userId: string, householdId: string) {
+    // Get the start of current week (Monday)
+    const now = new Date();
+    const currentDay = now.getDay();
+    const mondayOffset = currentDay === 0 ? 6 : currentDay - 1;
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - mondayOffset);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    const { data: transactions, error } = await supabase
+      .from('transactions')
+      .select(`
+        amount, 
+        date,
+        category:categories(name)
+      `)
+      .eq('user_id', userId)
+      .eq('household_id', householdId)
+      .eq('type', 'expense')
+      .gte('date', startOfWeek.toISOString())
+      .lte('date', endOfWeek.toISOString())
+      .order('date');
+
+    if (error) {
+      console.error('Error fetching weekly budget expenses:', error);
+      return [];
+    }
+
+    // Fixed cost categories (exclude from budget tracking)
+    // Support both English and German category names
+    const fixedCostCategories = [
+      'rent', 'miete', 'housing', 'wohnung',
+      'insurance', 'versicherung', 
+      'utilities', 'strom', 'gas', 'wasser', 'internet',
+      'subscription', 'abo', 'abonnement',
+      'loan', 'kredit', 'darlehen',
+      'mortgage', 'hypothek'
+    ];
+
+    // Initialize array for each day of the week
+    const weeklyData = [
+      { day: 'Mo', amount: 0 },
+      { day: 'Di', amount: 0 },
+      { day: 'Mi', amount: 0 },
+      { day: 'Do', amount: 0 },
+      { day: 'Fr', amount: 0 },
+      { day: 'Sa', amount: 0 },
+      { day: 'So', amount: 0 },
+    ];
+
+    // Group budget-relevant transactions by day of week
+    transactions?.forEach(transaction => {
+      const categoryName = (transaction.category as any)?.name?.toLowerCase() || '';
+      const isFixedCost = fixedCostCategories.some(fixed => categoryName.includes(fixed));
+      
+      if (!isFixedCost) {
+        const transactionDate = new Date(transaction.date);
+        const dayOfWeek = transactionDate.getDay();
+        const adjustedDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        weeklyData[adjustedDay].amount += Math.abs(transaction.amount);
+      }
+    });
+
+    return weeklyData;
+  },
+
   // Lösche eine Transaktion
   async deleteTransaction(transactionId: string): Promise<void> {
     try {

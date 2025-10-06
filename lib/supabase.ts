@@ -5,29 +5,49 @@ const supabaseUrl = 'https://ompfdpahawvculeouvii.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tcGZkcGFoYXd2Y3VsZW91dmlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1MjkyMDEsImV4cCI6MjA3NTEwNTIwMX0.uJqab06q3j2j8FALXpKa5AmXZnZdFf8hZdVINFWmd_c';
 
 // Check if we're in a web environment
-const isWebBuild = typeof window !== 'undefined';
+const isWebBuild = typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
 
 // For web builds, use a simple localStorage adapter
-// For native builds, use SecureStore
+// For native builds, use SecureStore or fallback
 const storageAdapter = isWebBuild 
   ? {
       getItem: (key: string) => {
-        return Promise.resolve(typeof window !== 'undefined' ? window.localStorage.getItem(key) : null);
+        try {
+          if (typeof window !== 'undefined' && window.localStorage) {
+            return Promise.resolve(window.localStorage.getItem(key));
+          }
+        } catch (error) {
+          console.warn('localStorage getItem failed:', error);
+        }
+        return Promise.resolve(null);
       },
       setItem: (key: string, value: string) => {
-        if (typeof window !== 'undefined') {
-          window.localStorage.setItem(key, value);
+        try {
+          if (typeof window !== 'undefined' && window.localStorage) {
+            window.localStorage.setItem(key, value);
+          }
+        } catch (error) {
+          console.warn('localStorage setItem failed:', error);
         }
         return Promise.resolve();
       },
       removeItem: (key: string) => {
-        if (typeof window !== 'undefined') {
-          window.localStorage.removeItem(key);
+        try {
+          if (typeof window !== 'undefined' && window.localStorage) {
+            window.localStorage.removeItem(key);
+          }
+        } catch (error) {
+          console.warn('localStorage removeItem failed:', error);
         }
         return Promise.resolve();
       },
     }
-  : null; // Will be set below for native
+  : {
+      // Fallback adapter for native or when localStorage is not available
+      getItem: (key: string) => Promise.resolve(null),
+      setItem: (key: string, value: string) => Promise.resolve(),
+      removeItem: (key: string) => Promise.resolve(),
+    };
 
 // Only import SecureStore for native platforms
 let nativeAdapter = null;
@@ -36,12 +56,26 @@ if (!isWebBuild) {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const SecureStore = require('expo-secure-store');
     nativeAdapter = {
-      getItem: (key: string) => SecureStore.getItemAsync(key),
-      setItem: (key: string, value: string) => SecureStore.setItemAsync(key, value),
-      removeItem: (key: string) => SecureStore.deleteItemAsync(key),
+      getItem: (key: string) => {
+        return SecureStore.getItemAsync(key).catch((error: any) => {
+          console.warn('SecureStore getItem failed:', error);
+          return null;
+        });
+      },
+      setItem: (key: string, value: string) => {
+        return SecureStore.setItemAsync(key, value).catch((error: any) => {
+          console.warn('SecureStore setItem failed:', error);
+        });
+      },
+      removeItem: (key: string) => {
+        return SecureStore.deleteItemAsync(key).catch((error: any) => {
+          console.warn('SecureStore removeItem failed:', error);
+        });
+      },
     };
-  } catch {
-    // Fallback to localStorage even on native if SecureStore fails
+  } catch (error) {
+    console.warn('SecureStore initialization failed:', error);
+    // Fallback to storageAdapter if SecureStore fails
     nativeAdapter = storageAdapter;
   }
 }

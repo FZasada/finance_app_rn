@@ -51,10 +51,15 @@
     "savings": "Savings",
     "weeklyExpenses": "Weekly Expenses",
     "weeklySpending": "Weekly Spending",
+    "weeklyBudgetSpending": "Weekly Budget Spending",
+    "weeklyBudgetExpenses": "Weekly Budget Expenses",
     "recentTransactions": "Recent Transactions",
     "noBudgetSet": "No budget set for this month",
     "setBudget": "Set Budget",
-    "expenseCategories": "Expense Categories"
+    "expenseCategories": "Expense Categories",
+    "fixedCosts": "Fixed Costs",
+    "netBalance": "Net Balance",
+    "forMonth": "for"
   },
   "transactions": {
     "title": "Transactions",

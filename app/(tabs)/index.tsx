@@ -24,16 +24,18 @@ const screenWidth = Dimensions.get("window").width;
 
 interface DashboardData {
   monthlyBudget: number;
-  spent: number;
-  income: number;
-  savings: number;
-  expensesByCategory: {
+  budgetSpent: number;        // Only budget-relevant expenses
+  totalIncome: number;
+  totalExpenses: number;      // All expenses
+  fixedCosts: number;         // Fixed costs like rent, utilities
+  netBalance: number;         // Total income - total expenses
+  budgetRelevantByCategory: {
     categoryName: string;
     amount: number;
     color: string;
     percentage: number;
   }[];
-  weeklyExpenses: {
+  weeklyBudgetExpenses: {
     day: string;
     amount: number;
   }[];
@@ -47,11 +49,13 @@ export default function DashboardScreen() {
   
   const [dashboardData, setDashboardData] = useState<DashboardData>({
     monthlyBudget: 0,
-    spent: 0,
-    income: 0,
-    savings: 0,
-    expensesByCategory: [],
-    weeklyExpenses: [],
+    budgetSpent: 0,
+    totalIncome: 0,
+    totalExpenses: 0,
+    fixedCosts: 0,
+    netBalance: 0,
+    budgetRelevantByCategory: [],
+    weeklyBudgetExpenses: [],
   });
   const [showAddModal, setShowAddModal] = useState(false);
   const [showBudgetModal, setShowBudgetModal] = useState(false);
@@ -76,35 +80,30 @@ export default function DashboardScreen() {
         .eq('month', currentMonth)
         .single();
 
-      // Get income vs expenses data using transaction service
-      const incomeVsExpenses = await transactionService.getIncomeVsExpenses(
+      // Get the new budget analysis (separates fixed costs from budget-relevant expenses)
+      const budgetAnalysis = await transactionService.getBudgetAnalysis(
         year, 
         month, 
         household.id
       );
 
-      // Get expenses by category
-      const expensesByCategory = await transactionService.getExpensesByCategory(
-        year,
-        month,
-        household.id
-      );
-
       const monthlyBudget = budgetData?.amount || 0;
 
-      // Get weekly expenses for line chart
-      const weeklyExpenses = await transactionService.getWeeklyExpenses(
+      // Get weekly budget-relevant expenses for line chart
+      const weeklyBudgetExpenses = await transactionService.getWeeklyBudgetExpenses(
         user.id,
         household.id
       );
 
       setDashboardData({
         monthlyBudget,
-        spent: incomeVsExpenses.expenses,
-        income: incomeVsExpenses.income,
-        savings: incomeVsExpenses.balance,
-        expensesByCategory,
-        weeklyExpenses,
+        budgetSpent: budgetAnalysis.budgetRelevantExpenses,
+        totalIncome: budgetAnalysis.totalIncome,
+        totalExpenses: budgetAnalysis.totalExpenses,
+        fixedCosts: budgetAnalysis.fixedCosts,
+        netBalance: budgetAnalysis.netBalance,
+        budgetRelevantByCategory: budgetAnalysis.budgetRelevantByCategory,
+        weeklyBudgetExpenses,
       });
     } catch (error) {
       console.error('Error loading dashboard data:', error);
@@ -135,31 +134,44 @@ export default function DashboardScreen() {
   });
 
   const budgetPercentage = dashboardData.monthlyBudget > 0 
-    ? (dashboardData.spent / dashboardData.monthlyBudget) * 100 
+    ? (dashboardData.budgetSpent / dashboardData.monthlyBudget) * 100 
     : 0;
-  const budgetRemaining = dashboardData.monthlyBudget - dashboardData.spent;
-  const isOverBudget = dashboardData.spent > dashboardData.monthlyBudget;
+  const budgetRemaining = dashboardData.monthlyBudget - dashboardData.budgetSpent;
+  const isOverBudget = dashboardData.budgetSpent > dashboardData.monthlyBudget;
 
   const handleQuickAction = (type: 'income' | 'expense') => {
     setModalType(type);
     setShowAddModal(true);
   };
 
-  // Chart data for weekly expenses
+  // Get current month and year with translations
+  const getCurrentMonthYearTranslated = () => {
+    const now = new Date();
+    const monthIndex = now.getMonth(); // 0-11
+    const monthKeys = [
+      'january', 'february', 'march', 'april', 'may', 'june',
+      'july', 'august', 'september', 'october', 'november', 'december'
+    ];
+    const translatedMonth = t(`months.${monthKeys[monthIndex]}`);
+    const year = now.getFullYear();
+    return `${translatedMonth} ${year}`;
+  };
+
+  // Chart data for weekly budget expenses (only variable costs)
   const chartData = {
-    labels: dashboardData.weeklyExpenses.map(item => item.day),
+    labels: dashboardData.weeklyBudgetExpenses.map(item => item.day),
     datasets: [
       {
-        data: dashboardData.weeklyExpenses.map(item => item.amount),
+        data: dashboardData.weeklyBudgetExpenses.map(item => item.amount),
         color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`, // optional
         strokeWidth: 2 // optional
       }
     ],
-    legend: [t('dashboard.weeklyExpenses')]
+    legend: [t('dashboard.weeklyBudgetExpenses')]
   };    // Mock data for charts - replace with real data later
   // Create custom formatted data for pie chart with € symbol
-  const expenseData = dashboardData.expensesByCategory.length > 0 
-    ? dashboardData.expensesByCategory.map(cat => {
+  const expenseData = dashboardData.budgetRelevantByCategory.length > 0 
+    ? dashboardData.budgetRelevantByCategory.map(cat => {
         return {
           name: cat.categoryName, // Just category name for the chart
           amount: cat.amount,
@@ -201,9 +213,14 @@ export default function DashboardScreen() {
         {/* Budget Overview */}
         <View style={styles.budgetCard}>
           <View style={styles.budgetHeader}>
-            <Text style={styles.cardTitle}>
-              {isOverBudget ? t('dashboard.budgetExceeded') : t('dashboard.budgetRemaining')}
-            </Text>
+            <View style={styles.budgetTitleContainer}>
+              <Text style={styles.cardTitle}>
+                {isOverBudget ? t('dashboard.budgetExceeded') : t('dashboard.budgetRemaining')}
+              </Text>
+              <Text style={styles.budgetPeriod}>
+                {t('dashboard.forMonth')} {getCurrentMonthYearTranslated()}
+              </Text>
+            </View>
             <TouchableOpacity 
               style={styles.setBudgetButton}
               onPress={() => setShowBudgetModal(true)}
@@ -222,7 +239,11 @@ export default function DashboardScreen() {
                   styles.remainingAmount,
                   { color: isOverBudget ? '#FF3B30' : '#28A745' }
                 ]}>
-                  {isOverBudget ? '-' : ''}{Math.abs(budgetRemaining).toFixed(2)} {getCurrencySymbol()}
+                  {isOverBudget ? '-' : ''}{Math.abs(budgetRemaining).toLocaleString('de-DE', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                    useGrouping: true,
+                  })} {getCurrencySymbol()}
                 </Text>
                 <Text style={styles.remainingText}>
                   {isOverBudget ? t('dashboard.overBudgetBy') : t('dashboard.leftToSpend')}
@@ -242,7 +263,10 @@ export default function DashboardScreen() {
                   />
                 </View>
                 <Text style={styles.progressText}>
-                  {budgetPercentage.toFixed(1)}% {t('budget.percentageUsed')}
+                  {budgetPercentage.toLocaleString('de-DE', {
+                    minimumFractionDigits: 1,
+                    maximumFractionDigits: 1,
+                  })}% {t('budget.percentageUsed')}
                 </Text>
               </View>
 
@@ -254,7 +278,7 @@ export default function DashboardScreen() {
                 <View style={styles.statItem}>
                   <Text style={styles.statLabel}>{t('dashboard.budgetUsed')}</Text>
                   <Text style={[styles.statValue, isOverBudget && styles.overBudgetText]}>
-                    {dashboardData.spent} {getCurrencySymbol()}
+                    {formatAmount(dashboardData.budgetSpent)}
                   </Text>
                 </View>
               </View>
@@ -269,21 +293,28 @@ export default function DashboardScreen() {
           )}
         </View>
 
-        {/* Income & Savings */}
+        {/* Financial Overview */}
         <View style={styles.statsRow}>
-          <View style={[styles.statCard, { marginRight: 10 }]}>
+          <View style={[styles.statCard, { marginRight: 5 }]}>
             <Text style={styles.cardTitle}>{t('dashboard.totalIncome')}</Text>
-            <Text style={[styles.statValue, { color: '#28A745' }]}>{dashboardData.income} {getCurrencySymbol()}</Text>
+            <Text style={[styles.statValue, { color: '#28A745' }]}>{formatAmount(dashboardData.totalIncome)}</Text>
           </View>
-          <View style={[styles.statCard, { marginLeft: 10 }]}>
-            <Text style={styles.cardTitle}>{t('dashboard.savings')}</Text>
-            <Text style={[styles.statValue, { color: '#28A745' }]}>{dashboardData.savings} {getCurrencySymbol()}</Text>
+          <View style={[styles.statCard, { marginHorizontal: 5 }]}>
+            <Text style={styles.cardTitle}>{t('dashboard.fixedCosts')}</Text>
+            <Text style={[styles.statValue, { color: '#FF6B6B' }]}>{formatAmount(dashboardData.fixedCosts)}</Text>
+          </View>
+          <View style={[styles.statCard, { marginLeft: 5 }]}>
+            <Text style={styles.cardTitle}>{t('dashboard.netBalance')}</Text>
+            <Text style={[
+              styles.statValue, 
+              { color: dashboardData.netBalance >= 0 ? '#28A745' : '#FF6B6B' }
+            ]}>{formatAmount(dashboardData.netBalance)}</Text>
           </View>
         </View>
 
-        {/* Weekly Spending Chart */}
+        {/* Weekly Budget Spending Chart */}
         <View style={styles.chartCard}>
-          <Text style={styles.cardTitle}>{t('dashboard.weeklySpending')}</Text>
+          <Text style={styles.cardTitle}>{t('dashboard.weeklyBudgetSpending')}</Text>
           <LineChart
             data={chartData}
             width={screenWidth - 60}
@@ -334,11 +365,11 @@ export default function DashboardScreen() {
           
           {/* Custom Legend */}
                     <View style={styles.customLegend}>
-            {dashboardData.expensesByCategory.map((item, index) => (
+            {dashboardData.budgetRelevantByCategory.map((item, index) => (
               <View key={`${item.categoryName}_${index}`} style={styles.legendItem}>
                 <View style={[styles.legendColor, { backgroundColor: item.color }]} />
                 <Text style={styles.legendText}>
-                  {formatAmount(item.amount)} {item.categoryName}
+                  {formatAmount(item.amount)} {t(`categories.${item.categoryName}`)}
                 </Text>
               </View>
             ))}
@@ -404,6 +435,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
   },
+  currentPeriod: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#007AFF',
+    marginTop: 8,
+    textAlign: 'center',
+  },
   budgetCard: {
     backgroundColor: 'white',
     margin: 20,
@@ -420,6 +458,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
+  },
+  budgetTitleContainer: {
+    flex: 1,
+  },
+  budgetPeriod: {
+    fontSize: 14,
+    color: '#888',
+    marginTop: 2,
+    fontStyle: 'italic',
   },
   setBudgetButton: {
     backgroundColor: '#007AFF',

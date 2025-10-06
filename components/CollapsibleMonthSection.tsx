@@ -45,7 +45,12 @@ export default function CollapsibleMonthSection({
 
   const formatAmount = (amount: number) => {
     const prefix = amount >= 0 ? '+' : '';
-    return `${prefix}${Math.abs(amount).toFixed(2)} ${getCurrencySymbol()}`;
+    const formattedAmount = Math.abs(amount).toLocaleString('de-DE', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+      useGrouping: true,
+    });
+    return `${prefix}${formattedAmount} ${getCurrencySymbol()}`;
   };
 
   const getMonthName = (monthNumber: string) => {

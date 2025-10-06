@@ -6,6 +6,7 @@ interface CurrencyContextType {
   currency: Currency;
   setCurrency: (currency: Currency) => void;
   formatAmount: (amount: number, showSign?: boolean) => string;
+  formatNumber: (amount: number, showSign?: boolean) => string;
   getCurrencySymbol: () => string;
   loading: boolean;
 }
@@ -64,19 +65,40 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
 
   const formatAmount = useCallback((amount: number, showSign: boolean = false) => {
     const prefix = showSign && amount >= 0 ? '+' : '';
-    const absAmount = Math.abs(amount).toFixed(2);
+    const absAmount = Math.abs(amount);
+    
+    // Deutsche Formatierung:
+    // - Punkt als Tausendertrennzeichen (1.000)
+    // - Komma als Dezimaltrennzeichen (1.234,56)
+    const formattedAmount = absAmount.toLocaleString('de-DE', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+      useGrouping: true, // Aktiviert Tausendertrennzeichen
+    });
     
     // Different formatting based on currency
     switch (currency.code) {
       case 'USD':
       case 'GBP':
-        return `${prefix}${currency.symbol}${absAmount}`;
+        return `${prefix}${currency.symbol}${formattedAmount}`;
       case 'PLN':
-        return `${prefix}${absAmount} ${currency.symbol}`;
+        return `${prefix}${formattedAmount} ${currency.symbol}`;
       default: // EUR and others
-        return `${prefix}${absAmount} ${currency.symbol}`;
+        return `${prefix}${formattedAmount} ${currency.symbol}`;
     }
   }, [currency]);
+
+  // Formatiert nur die Zahl ohne Währungssymbol
+  const formatNumber = useCallback((amount: number, showSign: boolean = false) => {
+    const prefix = showSign && amount >= 0 ? '+' : '';
+    const absAmount = Math.abs(amount);
+    
+    return prefix + absAmount.toLocaleString('de-DE', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+      useGrouping: true,
+    });
+  }, []);
 
   const getCurrencySymbol = useCallback(() => {
     return currency.symbol;
@@ -86,9 +108,10 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
     currency,
     setCurrency,
     formatAmount,
+    formatNumber,
     getCurrencySymbol,
     loading,
-  }), [currency, formatAmount, getCurrencySymbol, loading]);
+  }), [currency, formatAmount, formatNumber, getCurrencySymbol, loading]);
 
   return (
     <CurrencyContext.Provider value={value}>

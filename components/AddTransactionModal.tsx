@@ -74,17 +74,47 @@ export default function AddTransactionModal({
     onClose();
   };
 
+  // Funktion zur Verarbeitung der Betragseingabe
+  const handleAmountChange = (text: string) => {
+    // Erlaube nur Zahlen, Kommas und Punkte
+    const cleanedText = text.replace(/[^0-9,.-]/g, '');
+    
+    // Ersetze Kommas durch Punkte für konsistente Verarbeitung
+    const normalizedText = cleanedText.replace(',', '.');
+    
+    // Verhindere mehrere Dezimalpunkte
+    const parts = normalizedText.split('.');
+    if (parts.length > 2) {
+      return; // Ignoriere weitere Eingaben wenn schon ein Punkt vorhanden ist
+    }
+    
+    // Begrenze Dezimalstellen auf 2
+    if (parts[1] && parts[1].length > 2) {
+      return;
+    }
+    
+    // Zeige dem Benutzer die deutsche Formatierung mit Komma
+    const displayText = normalizedText.replace('.', ',');
+    setAmount(displayText);
+  };
+
   const handleSubmit = async () => {
     if (!amount || !description || !user || !selectedCategory) {
-      Alert.alert(t('common.error'), 'Please fill in all fields and select a category');
+      Alert.alert(t('common.error'), 'Bitte füllen Sie alle Felder aus und wählen Sie eine Kategorie');
       return;
     }
 
-    const numericAmount = parseFloat(amount);
+    // Verbesserte Betragsverarbeitung
+    const cleanAmount = amount.replace(',', '.').trim();
+    const numericAmount = parseFloat(cleanAmount);
+    
     if (isNaN(numericAmount) || numericAmount <= 0) {
-      Alert.alert(t('common.error'), 'Please enter a valid amount');
+      Alert.alert(t('common.error'), 'Bitte geben Sie einen gültigen Betrag ein (z.B. 33,45)');
       return;
     }
+
+    // Runde auf 2 Dezimalstellen
+    const roundedAmount = Math.round(numericAmount * 100) / 100;
 
     setLoading(true);
 
@@ -95,7 +125,7 @@ export default function AddTransactionModal({
           household_id: household?.id || null,
           user_id: user.id,
           type,
-          amount: numericAmount,
+          amount: roundedAmount,
           description,
           category_id: selectedCategory.id,
           date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
@@ -203,9 +233,9 @@ export default function AddTransactionModal({
               <TextInput
                 style={styles.amountInput}
                 value={amount}
-                onChangeText={setAmount}
-                placeholder="0.00"
-                keyboardType="numeric"
+                onChangeText={handleAmountChange}
+                placeholder="0,00"
+                keyboardType="decimal-pad"
                 returnKeyType="next"
               />
             </View>

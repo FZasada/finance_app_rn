@@ -181,7 +181,12 @@ export default function TransactionsScreen() {
 
   const formatAmount = (amount: number, type: 'income' | 'expense') => {
     const prefix = type === 'income' ? '+' : '-';
-    return `${prefix}${amount.toFixed(2)} ${getCurrencySymbol()}`;
+    const formattedAmount = amount.toLocaleString('de-DE', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+      useGrouping: true,
+    });
+    return `${prefix}${formattedAmount} ${getCurrencySymbol()}`;
   };
 
   const getTransactionIcon = (type: string, category?: { name: string; icon: string }) => {
