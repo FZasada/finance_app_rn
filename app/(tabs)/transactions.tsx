@@ -7,6 +7,7 @@ import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 import { supabase, Transaction } from '@/lib/supabase';
 import { transactionService } from '@/lib/transactionService';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -74,6 +75,13 @@ export default function TransactionsScreen() {
   useEffect(() => {
     loadTransactions();
   }, [loadTransactions]);
+
+  // Reload transactions when the screen is focused (user returns to this tab)
+  useFocusEffect(
+    useCallback(() => {
+      loadTransactions();
+    }, [loadTransactions])
+  );
 
   // Setup real-time updates for transactions
   useRealtimeUpdates({

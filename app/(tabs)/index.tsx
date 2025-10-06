@@ -6,6 +6,7 @@ import { useHousehold } from '@/contexts/HouseholdContext';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 import { supabase } from '@/lib/supabase';
 import { transactionService } from '@/lib/transactionService';
+import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -122,6 +123,13 @@ export default function DashboardScreen() {
   useEffect(() => {
     loadDashboardData();
   }, [loadDashboardData]);
+
+  // Reload dashboard data when the screen is focused (user returns to this tab)
+  useFocusEffect(
+    useCallback(() => {
+      loadDashboardData();
+    }, [loadDashboardData])
+  );
 
   // Setup real-time updates
   useRealtimeUpdates({
