@@ -468,13 +468,24 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
   pickerContent: {
     backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '50%',
+    borderRadius: 20,
+    height: '80%',
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    overflow: 'hidden',
   },
   pickerHeader: {
     flexDirection: 'row',
@@ -493,13 +504,16 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   pickerList: {
-    maxHeight: 300,
+    flex: 1,
   },
   categoryItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
+    minHeight: 60,
   },
   categoryItemSelected: {
     backgroundColor: '#007AFF',
@@ -507,6 +521,8 @@ const styles = StyleSheet.create({
   categoryText: {
     fontSize: 16,
     color: '#333',
+    marginLeft: 12,
+    flex: 1,
   },
   categoryTextSelected: {
     color: 'white',
