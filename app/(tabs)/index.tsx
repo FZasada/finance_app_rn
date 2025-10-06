@@ -35,9 +35,9 @@ interface DashboardData {
     color: string;
     percentage: number;
   }[];
-  weeklyBudgetExpenses: {
-    day: string;
-    amount: number;
+  monthlyBudgetTrack: {
+    day: number;
+    cumulativeSpent: number;
   }[];
 }
 
@@ -55,7 +55,7 @@ export default function DashboardScreen() {
     fixedCosts: 0,
     netBalance: 0,
     budgetRelevantByCategory: [],
-    weeklyBudgetExpenses: [],
+    monthlyBudgetTrack: [],
   });
   const [showAddModal, setShowAddModal] = useState(false);
   const [showBudgetModal, setShowBudgetModal] = useState(false);
@@ -89,9 +89,10 @@ export default function DashboardScreen() {
 
       const monthlyBudget = budgetData?.amount || 0;
 
-      // Get weekly budget-relevant expenses for line chart
-      const weeklyBudgetExpenses = await transactionService.getWeeklyBudgetExpenses(
-        user.id,
+      // Get monthly budget tracking data for line chart
+      const monthlyBudgetTrack = await transactionService.getMonthlyBudgetTrack(
+        year, 
+        month, 
         household.id
       );
 
@@ -103,7 +104,7 @@ export default function DashboardScreen() {
         fixedCosts: budgetAnalysis.fixedCosts,
         netBalance: budgetAnalysis.netBalance,
         budgetRelevantByCategory: budgetAnalysis.budgetRelevantByCategory,
-        weeklyBudgetExpenses,
+        monthlyBudgetTrack,
       });
     } catch (error) {
       console.error('Error loading dashboard data:', error);
@@ -157,17 +158,17 @@ export default function DashboardScreen() {
     return `${translatedMonth} ${year}`;
   };
 
-  // Chart data for weekly budget expenses (only variable costs)
-  const chartData = {
-    labels: dashboardData.weeklyBudgetExpenses.map(item => item.day),
-    datasets: [
-      {
-        data: dashboardData.weeklyBudgetExpenses.map(item => item.amount),
-        color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`, // optional
-        strokeWidth: 2 // optional
+  // Chart data for monthly budget tracking with budget limit line
+  // Create simplified labels: only show 5, 10, 15, 20, 25, 30
+  const createSimplifiedLabels = () => {
+    const labels = new Array(dashboardData.monthlyBudgetTrack.length).fill('');
+    const showLabels = [5, 10, 15, 20, 25, 30];
+    showLabels.forEach(day => {
+      if (day <= dashboardData.monthlyBudgetTrack.length) {
+        labels[day - 1] = day.toString();
       }
-    ],
-    legend: [t('dashboard.weeklyBudgetExpenses')]
+    });
+    return labels;
   };    // Mock data for charts - replace with real data later
   // Create custom formatted data for pie chart with € symbol
   const expenseData = dashboardData.budgetRelevantByCategory.length > 0 
@@ -312,11 +313,41 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* Weekly Budget Spending Chart */}
+        {/* Monthly Budget Tracking Chart */}
         <View style={styles.chartCard}>
-          <Text style={styles.cardTitle}>{t('dashboard.weeklyBudgetSpending')}</Text>
+          <Text style={styles.cardTitle}>{t('dashboard.monthlyBudgetSpending')}</Text>
+          
+          {/* Custom Chart Legend */}
+          <View style={styles.chartLegend}>
+            <View style={styles.chartLegendItem}>
+              <View style={[styles.chartLegendColor, { backgroundColor: 'rgba(134, 65, 244, 1)' }]} />
+              <Text style={styles.chartLegendText}>{t('dashboard.monthlyBudgetSpending')}</Text>
+            </View>
+            <View style={styles.chartLegendItem}>
+              <View style={[styles.chartLegendColor, { backgroundColor: 'rgba(255, 59, 48, 1)', borderStyle: 'dashed', borderWidth: 1, borderColor: 'rgba(255, 59, 48, 1)' }]} />
+              <Text style={styles.chartLegendText}>{t('dashboard.budgetLimit')}</Text>
+            </View>
+          </View>
+
           <LineChart
-            data={chartData}
+            data={{
+              labels: createSimplifiedLabels(),
+              datasets: [
+                {
+                  data: dashboardData.monthlyBudgetTrack.map(item => item.cumulativeSpent),
+                  color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`,
+                  strokeWidth: 3,
+                  withDots: false
+                },
+                {
+                  data: new Array(dashboardData.monthlyBudgetTrack.length).fill(dashboardData.monthlyBudget),
+                  color: (opacity = 1) => `rgba(255, 59, 48, ${opacity})`,
+                  strokeWidth: 2,
+                  strokeDashArray: [5, 5],
+                  withDots: false
+                }
+              ]
+            }}
             width={screenWidth - 60}
             height={220}
             chartConfig={{
@@ -328,13 +359,9 @@ export default function DashboardScreen() {
               labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
               style: {
                 borderRadius: 16
-              },
-              propsForDots: {
-                r: "6",
-                strokeWidth: "2",
-                stroke: "#007AFF"
               }
             }}
+            withDots={false}
             bezier
             style={styles.chart}
           />
@@ -364,12 +391,12 @@ export default function DashboardScreen() {
           />
           
           {/* Custom Legend */}
-                    <View style={styles.customLegend}>
+          <View style={styles.customLegend}>
             {dashboardData.budgetRelevantByCategory.map((item, index) => (
               <View key={`${item.categoryName}_${index}`} style={styles.legendItem}>
                 <View style={[styles.legendColor, { backgroundColor: item.color }]} />
                 <Text style={styles.legendText}>
-                  {formatAmount(item.amount)} {t(`categories.${item.categoryName}`)}
+                  {formatAmount(item.amount)} • {t(`categories.${item.categoryName}`)}
                 </Text>
               </View>
             ))}
@@ -593,6 +620,28 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     borderRadius: 16,
   },
+  chartLegend: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    marginBottom: 15,
+    paddingHorizontal: 10,
+    width: '100%',
+  },
+  chartLegendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  chartLegendColor: {
+    width: 16,
+    height: 3,
+    marginRight: 8,
+  },
+  chartLegendText: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
+  },
   quickActions: {
     margin: 20,
   },
@@ -620,26 +669,28 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   customLegend: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    paddingHorizontal: 10,
-    paddingTop: 10,
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    paddingHorizontal: 20,
+    paddingTop: 15,
+    width: '100%',
   },
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 15,
-    marginBottom: 8,
+    marginBottom: 10,
+    width: '100%',
   },
   legendColor: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    marginRight: 6,
+    marginRight: 10,
   },
   legendText: {
-    fontSize: 12,
-    color: '#7F7F7F',
+    fontSize: 13,
+    color: '#333',
+    fontWeight: '500',
+    flex: 1,
   },
 });

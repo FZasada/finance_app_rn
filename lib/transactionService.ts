@@ -225,12 +225,12 @@ export const transactionService = {
     const totalExpenses = expenses.reduce((sum, t) => sum + t.amount, 0);
     
     // Separate fixed costs from budget-relevant expenses
-    // Fixed costs are typically: rent, insurance, subscriptions, etc.
+    // Fixed costs are typically: rent, insurance, subscriptions, utilities, etc.
     // Support both English and German category names
     const fixedCostCategories = [
       'rent', 'miete', 'housing', 'wohnung',
       'insurance', 'versicherung', 
-      'utilities', 'strom', 'gas', 'wasser', 'internet',
+      'utilities', 'strom', 'gas', 'wasser', 'internet', 'fixkosten',
       'subscription', 'abo', 'abonnement',
       'loan', 'kredit', 'darlehen',
       'mortgage', 'hypothek'
@@ -357,6 +357,78 @@ export const transactionService = {
     });
 
     return weeklyData;
+  },
+
+  // Hole monatliche kumulative Budget-Tracking-Daten
+  async getMonthlyBudgetTrack(year: number, month: number, householdId: string): Promise<{
+    day: number;
+    cumulativeSpent: number;
+  }[]> {
+    try {
+      // Bestimme den ersten und letzten Tag des Monats
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0); // Letzter Tag des Monats
+      const daysInMonth = endDate.getDate();
+
+      // Hole alle relevanten Transaktionen für den Monat (mit Kategorien für Fixkosten-Filter)
+      const { data: transactions, error } = await supabase
+        .from('transactions')
+        .select(`
+          id,
+          amount,
+          date,
+          type,
+          category:categories(
+            id,
+            name
+          )
+        `)
+        .eq('household_id', householdId)
+        .eq('type', 'expense')
+        .gte('date', startDate.toISOString().split('T')[0])
+        .lte('date', endDate.toISOString().split('T')[0])
+        .order('date', { ascending: true });
+
+      if (error) throw error;
+
+      // Definiere Fixkosten-Kategorien (gleiche Liste wie in getBudgetAnalysis)
+      const fixedCostCategories = [
+        'rent', 'miete', 'housing', 'wohnung',
+        'insurance', 'versicherung', 
+        'utilities', 'strom', 'gas', 'wasser', 'internet', 'fixkosten',
+        'subscription', 'abo', 'abonnement',
+        'loan', 'kredit', 'darlehen',
+        'mortgage', 'hypothek'
+      ];
+
+      // Erstelle Array für jeden Tag des Monats
+      const monthlyData: { day: number; cumulativeSpent: number }[] = [];
+      let cumulativeSpent = 0;
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        // Finde alle budget-relevanten Transaktionen für diesen Tag (ohne Fixkosten)
+        const dayTransactions = transactions?.filter(t => {
+          const transactionDate = new Date(t.date);
+          const categoryName = (t.category as any)?.name?.toLowerCase() || '';
+          const isFixedCost = fixedCostCategories.some(fixed => categoryName.includes(fixed));
+          return transactionDate.getDate() === day && !isFixedCost;
+        }) || [];
+
+        // Addiere die Ausgaben des Tages zur kumulativen Summe
+        const daySpent = dayTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
+        cumulativeSpent += daySpent;
+
+        monthlyData.push({
+          day,
+          cumulativeSpent
+        });
+      }
+
+      return monthlyData;
+    } catch (error) {
+      console.error('Error getting monthly budget track:', error);
+      throw error;
+    }
   },
 
   // Lösche eine Transaktion
