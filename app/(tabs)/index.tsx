@@ -7,6 +7,7 @@ import { useHousehold } from '@/contexts/HouseholdContext';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 import { supabase } from '@/lib/supabase';
 import { transactionService } from '@/lib/transactionService';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -365,7 +366,26 @@ export default function DashboardScreen() {
           )}
         </View>
 
-
+        {/* Quick Actions */}
+        <View style={styles.quickActions}>
+          <Text style={styles.sectionTitle}>{t('quickActions.title')}</Text>
+          <View style={styles.actionButtons}>
+            <TouchableOpacity 
+              style={[styles.actionButton, { backgroundColor: '#EF4444' }]}
+              onPress={() => handleQuickAction('expense')}
+            >
+              <Ionicons name="remove-circle" size={24} color="white" />
+              <Text style={styles.actionButtonText}>{t('transactions.expense')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.actionButton, { backgroundColor: '#10B981' }]}
+              onPress={() => handleQuickAction('income')}
+            >
+              <Ionicons name="add-circle" size={24} color="white" />
+              <Text style={styles.actionButtonText}>{t('transactions.income')}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
         {/* Monthly Budget Tracking Chart */}
         <View style={styles.chartCard}>
@@ -478,25 +498,6 @@ export default function DashboardScreen() {
               </View>
             </View>
           </TouchableOpacity>
-        </View>
-
-        {/* Quick Actions */}
-        <View style={styles.quickActions}>
-          <Text style={styles.sectionTitle}>{t('quickActions.title')}</Text>
-          <View style={styles.actionButtons}>
-            <TouchableOpacity 
-              style={[styles.actionButton, { backgroundColor: '#EF4444' }]}
-              onPress={() => handleQuickAction('expense')}
-            >
-              <Text style={styles.actionButtonText}>{t('transactions.addExpense')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.actionButton, { backgroundColor: '#10B981' }]}
-              onPress={() => handleQuickAction('income')}
-            >
-              <Text style={styles.actionButtonText}>{t('transactions.addIncome')}</Text>
-            </TouchableOpacity>
-          </View>
         </View>
       </Animated.ScrollView>
 
@@ -772,17 +773,21 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
+    justifyContent: 'center',
     marginHorizontal: 5,
     shadowColor: '#64748B',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 3,
+    minHeight: 80,
   },
   actionButtonText: {
     color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 4,
+    textAlign: 'center',
   },
   customLegend: {
     flexDirection: 'column',
