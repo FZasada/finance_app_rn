@@ -4,7 +4,7 @@ import { useHousehold } from '@/contexts/HouseholdContext';
 import { categoryService } from '@/lib/categoryService';
 import { supabase, type Category } from '@/lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Alert,
@@ -44,12 +44,14 @@ export default function AddTransactionModal({
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Lade Kategorien beim Typ-Wechsel
+  // Update type when initialType changes
   useEffect(() => {
-    loadCategories();
-  }, [type, visible]);
+    if (visible) {
+      setType(initialType);
+    }
+  }, [initialType, visible]);
 
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     try {
       await categoryService.initializeDefaultCategories();
       const categoryList = await categoryService.getCategories(type);
@@ -60,7 +62,12 @@ export default function AddTransactionModal({
     } catch (error) {
       console.error('Error loading categories:', error);
     }
-  };
+  }, [type]);
+
+  // Lade Kategorien beim Typ-Wechsel
+  useEffect(() => {
+    loadCategories();
+  }, [loadCategories, visible]);
 
   const resetForm = () => {
     setAmount('');
