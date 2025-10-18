@@ -1,5 +1,6 @@
 import { Session, User } from '@supabase/supabase-js';
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { notificationService } from '../lib/notificationService';
 import { supabase } from '../lib/supabase';
 
 interface AuthContextType {
@@ -42,10 +43,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+
+      // Initialize notifications and daily reminders when user signs in
+      if (session?.user) {
+        try {
+          await notificationService.initialize();
+          // Load and schedule daily reminders
+          const reminderSettings = await notificationService.getDailyReminderSettings();
+          if (reminderSettings.enabled) {
+            await notificationService.scheduleDailyReminder(reminderSettings);
+          }
+        } catch (error) {
+          console.error('Error initializing daily reminders:', error);
+        }
+      } else {
+        // Cancel reminders when user signs out
+        try {
+          await notificationService.cancelDailyReminder();
+        } catch (error) {
+          console.error('Error canceling daily reminders:', error);
+        }
+      }
     });
 
     return () => subscription.unsubscribe();

@@ -1,22 +1,21 @@
 import CurrencyModal from '@/components/CurrencyModal';
+import DailyReminderModal from '@/components/DailyReminderModal';
 import DeleteDataModal from '@/components/DeleteDataModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    Alert,
-    Animated,
-    StatusBar,
-    StyleSheet,
-    Switch,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  Animated,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -31,14 +30,29 @@ export default function SettingsScreen() {
   const { t, i18n } = useTranslation();
   const { user, signOut } = useAuth();
   const { currency, setCurrency } = useCurrency();
-  const colorScheme = useColorScheme();
+  
+  // Use consistent colors matching the dashboard design
+  const colors = {
+    text: '#11181C',
+    background: '#fff',
+    tint: '#667eea',  // Match dashboard color
+    icon: '#687076',
+    border: '#E2E8F0',
+    textSecondary: '#64748B',
+    surface: '#ffffff',
+    shadow: '#64748B',
+    surfaceSecondary: '#F2F2F7',
+    backgroundSecondary: '#F8F9FA',
+    error: '#FF3B30',
+    iconSecondary: '#8E8E93'
+  };
   
   // Get app version from expo constants
   const appVersion = Constants.expoConfig?.version || '1.0.0';
 
-  const [darkMode, setDarkMode] = React.useState(colorScheme === 'dark');
   const [showDeleteDataModal, setShowDeleteDataModal] = React.useState(false);
   const [showCurrencyModal, setShowCurrencyModal] = React.useState(false);
+  const [showDailyReminderModal, setShowDailyReminderModal] = React.useState(false);
 
   // Animation values for collapsible header
   const scrollY = new Animated.Value(0);
@@ -114,6 +128,23 @@ export default function SettingsScreen() {
     return currentLang ? `${currentLang.flag} ${currentLang.name}` : 'Unknown';
   };
 
+  const showThemeSelector = () => {
+    Alert.alert(
+      'Theme',
+      'Theme selection',
+      [
+        { text: '☀️ Light', onPress: () => console.log('Light theme') },
+        { text: '🌙 Dark', onPress: () => console.log('Dark theme') },
+        { text: '📱 System', onPress: () => console.log('System theme') },
+        { text: t('common.cancel'), style: 'cancel' },
+      ]
+    );
+  };
+
+  const getCurrentThemeLabel = () => {
+    return 'System';
+  };
+
   const SettingItem = ({ 
     icon, 
     title, 
@@ -126,33 +157,36 @@ export default function SettingsScreen() {
     subtitle?: string;
     onPress?: () => void;
     rightElement?: React.ReactNode;
-  }) => (
-    <TouchableOpacity style={styles.settingItem} onPress={onPress}>
-      <View style={styles.settingLeft}>
-        <View style={styles.iconContainer}>
-          <Ionicons name={icon as any} size={20} color="#007AFF" />
+  }) => {
+    return (
+      <TouchableOpacity style={[styles.settingItem, { borderBottomColor: colors.border }]} onPress={onPress}>
+        <View style={styles.settingLeft}>
+          <View style={[styles.iconContainer, { backgroundColor: colors.surfaceSecondary }]}>
+            <Ionicons name={icon as any} size={20} color={colors.tint} />
+          </View>
+          <View style={styles.settingText}>
+            <Text style={[styles.settingTitle, { color: colors.text }]}>{title}</Text>
+            {subtitle && <Text style={[styles.settingSubtitle, { color: colors.textSecondary }]}>{subtitle}</Text>}
+          </View>
         </View>
-        <View style={styles.settingText}>
-          <Text style={styles.settingTitle}>{title}</Text>
-          {subtitle && <Text style={styles.settingSubtitle}>{subtitle}</Text>}
+        <View style={styles.settingRight}>
+          {rightElement || <Ionicons name="chevron-forward" size={16} color={colors.icon} />}
         </View>
-      </View>
-      <View style={styles.settingRight}>
-        {rightElement || <Ionicons name="chevron-forward" size={16} color="#ccc" />}
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   return (
-    <SafeAreaView style={styles.safeAreaContainer} edges={['top', 'left', 'right']}>
-      <StatusBar backgroundColor="#667eea" barStyle="light-content" />
-      <View style={styles.container}>
+    <SafeAreaView style={[styles.safeAreaContainer, { backgroundColor: colors.tint }]} edges={['top', 'left', 'right']}>
+      <StatusBar backgroundColor={colors.tint} barStyle="light-content" />
+      <View style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}>
         <Animated.View style={[
           styles.header, 
           { 
             height: headerHeight,
             paddingTop: headerPaddingTop,
             paddingBottom: headerPaddingBottom,
+            backgroundColor: colors.tint,
           }
         ]}>
           {/* Compact Title - erscheint beim Scrollen */}
@@ -175,7 +209,7 @@ export default function SettingsScreen() {
         </Animated.View>
         
         <Animated.ScrollView 
-          style={styles.content}
+          style={[styles.content, { backgroundColor: colors.backgroundSecondary }]}
           onScroll={Animated.event(
             [{ nativeEvent: { contentOffset: { y: scrollY } } }],
             { useNativeDriver: false }
@@ -184,15 +218,15 @@ export default function SettingsScreen() {
         >
         {/* User Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('settings.account')}</Text>
-          <View style={styles.card}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('settings.account')}</Text>
+          <View style={[styles.card, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
             <View style={styles.userInfo}>
-              <View style={styles.avatar}>
-                <Ionicons name="person" size={32} color="#007AFF" />
+              <View style={[styles.avatar, { backgroundColor: colors.surfaceSecondary }]}>
+                <Ionicons name="person" size={32} color={colors.tint} />
               </View>
               <View style={styles.userDetails}>
-                <Text style={styles.userName}>{user?.email}</Text>
-                <Text style={styles.userRole}>
+                <Text style={[styles.userName, { color: colors.text }]}>{user?.email}</Text>
+                <Text style={[styles.userRole, { color: colors.textSecondary }]}>
                   {t('settings.user')}
                 </Text>
               </View>
@@ -202,8 +236,8 @@ export default function SettingsScreen() {
 
         {/* App Settings */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('settings.appSettings')}</Text>
-          <View style={styles.card}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('settings.appSettings')}</Text>
+          <View style={[styles.card, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
             <SettingItem
               icon="language"
               title={t('settings.language')}
@@ -212,32 +246,31 @@ export default function SettingsScreen() {
             />
             
             <SettingItem
-              icon="moon"
-              title={t('settings.darkMode')}
-              subtitle={darkMode ? t('common.enabled') : t('common.disabled')}
-              rightElement={
-                <Switch
-                  value={darkMode}
-                  onValueChange={setDarkMode}
-                />
-              }
+              icon="contrast"
+              title={t('settings.theme')}
+              subtitle={getCurrentThemeLabel()}
+              onPress={showThemeSelector}
             />
-            
+          </View>
+        </View>
+
+        {/* Daily Reminders */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('settings.notifications')}</Text>
+          <View style={[styles.card, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
             <SettingItem
               icon="notifications"
-              title={t('settings.notifications')}
-              subtitle={t('settings.notificationSettings')}
-              onPress={() => {
-                Alert.alert('Coming Soon', 'Notification settings will be available in the next update.');
-              }}
+              title={t('dailyReminder.title')}
+              subtitle={t('dailyReminder.description')}
+              onPress={() => setShowDailyReminderModal(true)}
             />
           </View>
         </View>
 
         {/* Household Settings */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('household.title')}</Text>
-          <View style={styles.card}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('household.title')}</Text>
+          <View style={[styles.card, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
             <SettingItem
               icon="people"
               title={t('household.manageHousehold')}
@@ -249,8 +282,8 @@ export default function SettingsScreen() {
 
         {/* Finance Settings */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('settings.financeSettings')}</Text>
-          <View style={styles.card}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('settings.financeSettings')}</Text>
+          <View style={[styles.card, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
             <SettingItem
               icon="card"
               title={t('settings.defaultCurrency')}
@@ -280,8 +313,8 @@ export default function SettingsScreen() {
 
         {/* Support */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('settings.support')}</Text>
-          <View style={styles.card}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('settings.support')}</Text>
+          <View style={[styles.card, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
             <SettingItem
               icon="help-circle"
               title={t('settings.help')}
@@ -311,19 +344,33 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Data Protection & Account Management */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('settings.dataManagement')}</Text>
+          <View style={[styles.card, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+            <SettingItem
+              icon="shield-checkmark"
+              title="Datenschutz"
+              subtitle="Datenschutzrichtlinie und Einstellungen"
+              onPress={() => {
+                Alert.alert('Datenschutz', 'Datenschutzrichtlinie wird hier angezeigt.');
+              }}
+            />
+            
+            <SettingItem
+              icon="trash"
+              title="Alle Daten löschen"
+              subtitle="Alle Transaktionen und Daten unwiderruflich löschen"
+              onPress={() => setShowDeleteDataModal(true)}
+            />
+          </View>
+        </View>
+
         {/* Sign Out */}
         <View style={styles.section}>
-          <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+          <TouchableOpacity style={[styles.signOutButton, { backgroundColor: colors.error }]} onPress={handleSignOut}>
             <Ionicons name="log-out" size={20} color="white" />
             <Text style={styles.signOutText}>{t('settings.signOut')}</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.deleteDataButton} 
-            onPress={() => setShowDeleteDataModal(true)}
-          >
-            <Ionicons name="trash" size={20} color="white" />
-            <Text style={styles.deleteDataText}>{t('settings.dataManagement')}</Text>
           </TouchableOpacity>
         </View>
         </Animated.ScrollView>
@@ -339,6 +386,11 @@ export default function SettingsScreen() {
         onCurrencyChanged={setCurrency}
         currentCurrency={currency}
       />
+
+      <DailyReminderModal
+        visible={showDailyReminderModal}
+        onClose={() => setShowDailyReminderModal(false)}
+      />
       </View>
     </SafeAreaView>
   );
@@ -347,17 +399,14 @@ export default function SettingsScreen() {
   const styles = StyleSheet.create({
   safeAreaContainer: {
     flex: 1,
-    backgroundColor: '#667eea', // Gleiche Farbe wie der Header für nahtlosen Übergang
   },
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
   },
   header: {
     paddingHorizontal: 20,
     paddingTop: 10,
     paddingBottom: 15,
-    backgroundColor: '#667eea',
     justifyContent: 'center',
     alignItems: 'center',
     minHeight: 0,
@@ -371,7 +420,6 @@ export default function SettingsScreen() {
   content: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#F8FAFC',
   },
   section: {
     marginBottom: 24,
@@ -379,18 +427,18 @@ export default function SettingsScreen() {
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666',
     marginBottom: 12,
     paddingHorizontal: 4,
   },
   card: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderRadius: 16,
+    shadowColor: '#64748B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 0.5,
+    borderColor: '#E2E8F0',
   },
   userInfo: {
     flexDirection: 'row',
@@ -401,7 +449,6 @@ export default function SettingsScreen() {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#f0f0f0',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -412,12 +459,10 @@ export default function SettingsScreen() {
   userName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 4,
   },
   userRole: {
     fontSize: 14,
-    color: '#666',
   },
   settingItem: {
     flexDirection: 'row',
@@ -425,7 +470,6 @@ export default function SettingsScreen() {
     justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
   },
   settingLeft: {
     flexDirection: 'row',
@@ -436,7 +480,6 @@ export default function SettingsScreen() {
     width: 32,
     height: 32,
     borderRadius: 8,
-    backgroundColor: '#f0f0f0',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -447,12 +490,10 @@ export default function SettingsScreen() {
   settingTitle: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
     marginBottom: 2,
   },
   settingSubtitle: {
     fontSize: 14,
-    color: '#666',
   },
   settingRight: {
     marginLeft: 12,
@@ -461,9 +502,13 @@ export default function SettingsScreen() {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FF3B30',
     padding: 16,
     borderRadius: 12,
+    shadowColor: '#64748B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   signOutText: {
     color: 'white',
@@ -475,10 +520,14 @@ export default function SettingsScreen() {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#8E8E93',
     padding: 16,
     borderRadius: 12,
     marginTop: 12,
+    shadowColor: '#64748B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   deleteDataText: {
     color: 'white',

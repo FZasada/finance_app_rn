@@ -183,6 +183,22 @@
     "budgetWarning": "Budget warning!",
     "budgetWarningDesc": "You have used {{percentage}}% of your monthly budget"
   },
+  "dailyReminder": {
+    "title": "Daily Reminders",
+    "description": "Get daily notifications to remember tracking your expenses",
+    "enableReminders": "Enable reminders",
+    "reminderTime": "Reminder time",
+    "changeTime": "Change time",
+    "selectTime": "Select time",
+    "done": "Done",
+    "defaultMessages": [
+      "Don't forget to log your today's expenses! 📝",
+      "Have you recorded all transactions today? 💸",
+      "Time for a quick finance check! 🔍",
+      "Remember to document your purchases! 🛒",
+      "Quick reminder: Enter today's expenses! ✨"
+    ]
+  },
   "quickActions": {
     "title": "Quick Actions",
     "description": "Set budget for this month and track spending goals"

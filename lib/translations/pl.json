@@ -183,6 +183,22 @@
     "budgetWarning": "Ostrzeżenie budżetowe!",
     "budgetWarningDesc": "Wykorzystałeś {{percentage}}% miesięcznego budżetu"
   },
+  "dailyReminder": {
+    "title": "Codzienne przypomnienia",
+    "description": "Otrzymuj codzienne powiadomienia, aby nie zapomnieć o wprowadzaniu wydatków",
+    "enableReminders": "Włącz przypomnienia",
+    "reminderTime": "Czas przypomnienia",
+    "changeTime": "Zmień czas",
+    "selectTime": "Wybierz czas",
+    "done": "Gotowe",
+    "defaultMessages": [
+      "Nie zapomnij wprowadzić dzisiejszych wydatków! 📝",
+      "Czy zarejestrowałeś już wszystkie dzisiejsze transakcje? 💸",
+      "Czas na szybki przegląd finansów! 🔍",
+      "Pamiętaj o dokumentowaniu swoich zakupów! 🛒",
+      "Krótkie przypomnienie: wprowadź dzisiejsze wydatki! ✨"
+    ]
+  },
   "quickActions": {
     "title": "Szybkie akcje",
     "description": "Ustaw miesięczny budżet, aby śledzić wydatki i pozostać na celu"

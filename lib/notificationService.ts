@@ -14,14 +14,20 @@ Notifications.setNotificationHandler({
 });
 
 export interface NotificationData {
-  type: 'transaction_added' | 'transaction_updated' | 'transaction_deleted' | 'budget_exceeded';
+  type: 'transaction_added' | 'transaction_updated' | 'transaction_deleted' | 'budget_exceeded' | 'daily_reminder';
   title: string;
   body: string;
   data?: any;
 }
 
+export interface DailyReminderSettings {
+  enabled: boolean;
+  time: string; // Format: "HH:MM"
+  messages: string[];
+}
+
 class NotificationService {
-  private expoPushToken: string | null = null;
+  private readonly expoPushToken: string | null = null;
 
   /**
    * Initialize notification service and register for push notifications
@@ -188,6 +194,114 @@ class NotificationService {
    */
   getPushToken() {
     return this.expoPushToken;
+  }
+
+  /**
+   * Schedule daily reminder notifications
+   */
+  async scheduleDailyReminder(settings: DailyReminderSettings) {
+    try {
+      // Cancel existing daily reminders
+      await this.cancelDailyReminder();
+
+      if (!settings.enabled) {
+        return;
+      }
+
+      // Parse time
+      const [hours, minutes] = settings.time.split(':').map(Number);
+      
+      // Get a random message for variety
+      const message = settings.messages[Math.floor(Math.random() * settings.messages.length)];
+
+      // Create trigger for daily notification
+      const trigger: Notifications.CalendarTriggerInput = {
+        type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+        hour: hours,
+        minute: minutes,
+        repeats: true,
+      };
+
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '💰 Finanz-Erinnerung',
+          body: message,
+          data: {
+            type: 'daily_reminder',
+          },
+          sound: true,
+        },
+        trigger,
+        identifier: 'daily_expense_reminder',
+      });
+
+      console.log('Daily reminder scheduled for', settings.time);
+    } catch (error) {
+      console.error('Error scheduling daily reminder:', error);
+    }
+  }
+
+  /**
+   * Cancel daily reminder notifications
+   */
+  async cancelDailyReminder() {
+    try {
+      await Notifications.cancelScheduledNotificationAsync('daily_expense_reminder');
+      console.log('Daily reminder cancelled');
+    } catch (error) {
+      console.error('Error cancelling daily reminder:', error);
+    }
+  }
+
+  /**
+   * Get daily reminder settings from AsyncStorage
+   */
+  async getDailyReminderSettings(): Promise<DailyReminderSettings> {
+    try {
+      const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+      const settings = await AsyncStorage.getItem('daily_reminder_settings');
+      
+      if (settings) {
+        return JSON.parse(settings);
+      }
+
+      // Default settings
+      return {
+        enabled: true,
+        time: '12:00', // 12 PM CET default
+        messages: [
+          'Vergiss nicht, deine heutigen Ausgaben einzutragen! 📝',
+          'Hast du heute schon alle Transaktionen erfasst? 💸',
+          'Zeit für einen kurzen Finanz-Check! 🔍',
+          'Denk daran, deine Einkäufe zu dokumentieren! 🛒',
+          'Kurze Erinnerung: Ausgaben des Tages eintragen! ✨'
+        ]
+      };
+    } catch (error) {
+      console.error('Error getting daily reminder settings:', error);
+      return {
+        enabled: true,
+        time: '12:00',
+        messages: ['Zeit, deine Ausgaben einzutragen! 💰']
+      };
+    }
+  }
+
+  /**
+   * Save daily reminder settings to AsyncStorage
+   */
+  async saveDailyReminderSettings(settings: DailyReminderSettings) {
+    try {
+      const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+      await AsyncStorage.setItem('daily_reminder_settings', JSON.stringify(settings));
+      
+      // Reschedule with new settings
+      await this.scheduleDailyReminder(settings);
+      
+      console.log('Daily reminder settings saved:', settings);
+    } catch (error) {
+      console.error('Error saving daily reminder settings:', error);
+    }
   }
 }
 

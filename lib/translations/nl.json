@@ -183,6 +183,22 @@
     "budgetWarning": "Budgetwaarschuwing!",
     "budgetWarningDesc": "Je hebt {{percentage}}% van je maandelijkse budget gebruikt"
   },
+  "dailyReminder": {
+    "title": "Dagelijkse herinneringen",
+    "description": "Ontvang dagelijkse meldingen om je uitgaven niet te vergeten",
+    "enableReminders": "Herinneringen inschakelen",
+    "reminderTime": "Herinneringstijd",
+    "changeTime": "Tijd wijzigen",
+    "selectTime": "Selecteer tijd",
+    "done": "Klaar",
+    "defaultMessages": [
+      "Vergeet niet om je uitgaven van vandaag in te voeren! 📝",
+      "Heb je alle transacties van vandaag al geregistreerd? 💸",
+      "Tijd voor een snelle financiële check! 🔍",
+      "Denk eraan om je aankopen te documenteren! 🛒",
+      "Korte herinnering: voer de uitgaven van vandaag in! ✨"
+    ]
+  },
   "quickActions": {
     "title": "Snelle acties",
     "description": "Stel een maandelijks budget in om uitgaven bij te houden en op koers te blijven"
