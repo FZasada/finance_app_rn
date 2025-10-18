@@ -61,7 +61,24 @@
     "expenseCategories": "Ausgabenkategorien",
     "fixedCosts": "Fixkosten",
     "netBalance": "Nettobilanz",
-    "forMonth": "für"
+    "forMonth": "für",
+    "budgetExpenses": "Budgetausgaben"
+  },
+  "financialOverview": {
+    "title": "Finanzübersicht",
+    "timePeriod": "Zeitraum",
+    "budgetVsExpenses": "Budget vs. Ausgaben",
+    "budgetPerformance": "Budget-Performance",
+    "savingsPotential": "Sparpotenzial",
+    "averageMonthlyExpenses": "Durchschnittliche monatliche Ausgaben",
+    "suggestedReduction": "Vorgeschlagene Reduktion",
+    "annualSavingsPotential": "Jährliches Sparpotenzial",
+    "savingsTip": "💡 Tipp: Halte dich an dein Budget und reduziere Überschreitungen, um deine Sparziele zu erreichen!",
+    "monthlyBreakdown": "Monatliche Budget-Analyse",
+    "noData": "Keine Daten für den ausgewählten Zeitraum verfügbar",
+    "budgetRemaining": "Budget übrig",
+    "budgetExceeded": "Budget überschritten",
+    "budgetUsagePercentage": "Budget-Verwendung (%)"
   },
   "transactions": {
     "title": "Transaktionen",
@@ -97,6 +114,8 @@
   },
   "household": {
     "title": "Haushalt",
+    "manageHousehold": "Haushalt verwalten",
+    "viewMembers": "Mitglieder und Einstellungen anzeigen",
     "createHousehold": "Haushalt erstellen",
     "joinHousehold": "Haushalt beitreten",
     "householdName": "Haushaltsname",

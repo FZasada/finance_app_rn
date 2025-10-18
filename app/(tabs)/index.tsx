@@ -1,4 +1,5 @@
 import AddTransactionModal from '@/components/AddTransactionModal';
+import FinancialOverviewModal from '@/components/FinancialOverview';
 import SetBudgetModal from '@/components/SetBudgetModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -10,9 +11,10 @@ import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  Animated,
   Dimensions,
   RefreshControl,
-  ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -25,11 +27,11 @@ const screenWidth = Dimensions.get("window").width;
 
 interface DashboardData {
   monthlyBudget: number;
-  budgetSpent: number;        // Only budget-relevant expenses
+  budgetSpent: number;        // All expenses are now budget-relevant
   totalIncome: number;
   totalExpenses: number;      // All expenses
-  fixedCosts: number;         // Fixed costs like rent, utilities
   netBalance: number;         // Total income - total expenses
+  monthlySavings: number;     // Positive net balance (savings)
   budgetRelevantByCategory: {
     categoryName: string;
     amount: number;
@@ -53,15 +55,51 @@ export default function DashboardScreen() {
     budgetSpent: 0,
     totalIncome: 0,
     totalExpenses: 0,
-    fixedCosts: 0,
     netBalance: 0,
+    monthlySavings: 0,
     budgetRelevantByCategory: [],
     monthlyBudgetTrack: [],
   });
   const [showAddModal, setShowAddModal] = useState(false);
   const [showBudgetModal, setShowBudgetModal] = useState(false);
+  const [showFinancialOverview, setShowFinancialOverview] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [modalType, setModalType] = useState<'income' | 'expense'>('expense');
+  
+  // Animation values for collapsible header
+  const scrollY = new Animated.Value(0);
+  const headerHeight = scrollY.interpolate({
+    inputRange: [0, 80],
+    outputRange: [80, 44], // Minimaler kollabierter Header für beste UX
+    extrapolate: 'clamp',
+  });
+  const titleOpacity = scrollY.interpolate({
+    inputRange: [0, 40],
+    outputRange: [1, 0], // Großer Titel verschwindet
+    extrapolate: 'clamp',
+  });
+  const greetingOpacity = scrollY.interpolate({
+    inputRange: [0, 30],
+    outputRange: [1, 0], // Begrüßung verschwindet
+    extrapolate: 'clamp',
+  });
+  const compactTitleOpacity = scrollY.interpolate({
+    inputRange: [40, 80],
+    outputRange: [0, 1], // Kompakter Titel erscheint
+    extrapolate: 'clamp',
+  });
+  
+  // Dynamisches Padding für minimalen kollabierten Header
+  const headerPaddingTop = scrollY.interpolate({
+    inputRange: [0, 80],
+    outputRange: [10, 0], // Padding verschwindet im kollabierten Zustand
+    extrapolate: 'clamp',
+  });
+  const headerPaddingBottom = scrollY.interpolate({
+    inputRange: [0, 80],
+    outputRange: [15, 0], // Padding verschwindet im kollabierten Zustand
+    extrapolate: 'clamp',
+  });
 
   const loadDashboardData = useCallback(async () => {
     if (!user || !household) return;
@@ -81,7 +119,7 @@ export default function DashboardScreen() {
         .eq('month', currentMonth)
         .single();
 
-      // Get the new budget analysis (separates fixed costs from budget-relevant expenses)
+      // Get the simplified budget analysis (all expenses are budget-relevant)
       const budgetAnalysis = await transactionService.getBudgetAnalysis(
         year, 
         month, 
@@ -102,8 +140,8 @@ export default function DashboardScreen() {
         budgetSpent: budgetAnalysis.budgetRelevantExpenses,
         totalIncome: budgetAnalysis.totalIncome,
         totalExpenses: budgetAnalysis.totalExpenses,
-        fixedCosts: budgetAnalysis.fixedCosts,
         netBalance: budgetAnalysis.netBalance,
+        monthlySavings: budgetAnalysis.monthlySavings,
         budgetRelevantByCategory: budgetAnalysis.budgetRelevantByCategory,
         monthlyBudgetTrack,
       });
@@ -200,24 +238,49 @@ export default function DashboardScreen() {
       ];
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView 
-        style={styles.scrollView}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor="#007AFF"
-            colors={['#007AFF']}
-          />
-        }
-      >
-        <View style={styles.header}>
-          <Text style={styles.title}>{t('dashboard.title')}</Text>
-          <Text style={styles.greeting}>
-            Hi, {user?.email?.split('@')[0]}!
-          </Text>
-        </View>
+    <SafeAreaView style={styles.safeAreaContainer} edges={['top', 'left', 'right']}>
+      <StatusBar backgroundColor="#667eea" barStyle="light-content" />
+      <View style={styles.container}>
+        <Animated.View style={[
+          styles.header, 
+          { 
+            height: headerHeight,
+            paddingTop: headerPaddingTop,
+            paddingBottom: headerPaddingBottom,
+          }
+        ]}>
+          {/* Kompakter zentrierter Titel für kollabierte Ansicht */}
+          <Animated.Text style={[styles.compactTitle, { opacity: compactTitleOpacity }]}>
+            {t('dashboard.title')}
+          </Animated.Text>
+          
+          {/* Normale Header-Inhalte */}
+          <View style={styles.headerContent}>
+            <Animated.Text style={[styles.title, { opacity: titleOpacity }]}>
+              {t('dashboard.title')}
+            </Animated.Text>
+            <Animated.Text style={[styles.greeting, { opacity: greetingOpacity }]}>
+              Hi, {user?.email?.split('@')[0]}!
+            </Animated.Text>
+          </View>
+        </Animated.View>
+        <Animated.ScrollView 
+          style={styles.scrollView}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false }
+          )}
+          scrollEventThrottle={16}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor="#667eea"
+              colors={['#667eea']}
+            />
+          }
+        >
+          
 
         {/* Budget Overview */}
         <View style={styles.budgetCard}>
@@ -302,24 +365,7 @@ export default function DashboardScreen() {
           )}
         </View>
 
-        {/* Financial Overview */}
-        <View style={styles.statsRow}>
-          <View style={[styles.statCard, { marginRight: 5 }]}>
-            <Text style={styles.cardTitle}>{t('dashboard.totalIncome')}</Text>
-            <Text style={[styles.statValue, { color: '#28A745' }]}>{formatAmount(dashboardData.totalIncome)}</Text>
-          </View>
-          <View style={[styles.statCard, { marginHorizontal: 5 }]}>
-            <Text style={styles.cardTitle}>{t('dashboard.fixedCosts')}</Text>
-            <Text style={[styles.statValue, { color: '#FF6B6B' }]}>{formatAmount(dashboardData.fixedCosts)}</Text>
-          </View>
-          <View style={[styles.statCard, { marginLeft: 5 }]}>
-            <Text style={styles.cardTitle}>{t('dashboard.netBalance')}</Text>
-            <Text style={[
-              styles.statValue, 
-              { color: dashboardData.netBalance >= 0 ? '#28A745' : '#FF6B6B' }
-            ]}>{formatAmount(dashboardData.netBalance)}</Text>
-          </View>
-        </View>
+
 
         {/* Monthly Budget Tracking Chart */}
         <View style={styles.chartCard}>
@@ -411,25 +457,48 @@ export default function DashboardScreen() {
           </View>
         </View>
 
+        {/* Finanzübersicht Button */}
+        <View style={styles.overviewSection}>
+          <TouchableOpacity 
+            style={styles.overviewButton}
+            onPress={() => setShowFinancialOverview(true)}
+          >
+            <View style={styles.overviewButtonContent}>
+              <View style={styles.overviewIconContainer}>
+                <Text style={styles.overviewIcon}>📊</Text>
+              </View>
+              <View style={styles.overviewTextContainer}>
+                <Text style={styles.overviewButtonTitle}>{t('financialOverview.title')}</Text>
+                <Text style={styles.overviewButtonSubtitle}>
+                  Vergleiche deine Finanzen über mehrere Monate
+                </Text>
+              </View>
+              <View style={styles.overviewArrow}>
+                <Text style={styles.overviewArrowText}>→</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </View>
+
         {/* Quick Actions */}
         <View style={styles.quickActions}>
           <Text style={styles.sectionTitle}>{t('quickActions.title')}</Text>
           <View style={styles.actionButtons}>
             <TouchableOpacity 
-              style={[styles.actionButton, { backgroundColor: '#FF3B30' }]}
+              style={[styles.actionButton, { backgroundColor: '#EF4444' }]}
               onPress={() => handleQuickAction('expense')}
             >
               <Text style={styles.actionButtonText}>{t('transactions.addExpense')}</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-              style={[styles.actionButton, { backgroundColor: '#28A745' }]}
+              style={[styles.actionButton, { backgroundColor: '#10B981' }]}
               onPress={() => handleQuickAction('income')}
             >
               <Text style={styles.actionButtonText}>{t('transactions.addIncome')}</Text>
             </TouchableOpacity>
           </View>
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
 
       <AddTransactionModal
         visible={showAddModal}
@@ -444,31 +513,72 @@ export default function DashboardScreen() {
         onSuccess={loadDashboardData}
         currentBudget={dashboardData.monthlyBudget}
       />
+
+      <FinancialOverviewModal
+        visible={showFinancialOverview}
+        onClose={() => setShowFinancialOverview(false)}
+      />
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeAreaContainer: {
+    flex: 1,
+    backgroundColor: '#667eea', // Wichtig: Färbt den kompletten SafeArea-Bereich einschließlich Statusbar
+  },
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F8FAFC',
   },
   scrollView: {
     flex: 1,
   },
   header: {
-    padding: 20,
-    backgroundColor: 'white',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 15,
+    backgroundColor: '#667eea',
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 0,
+    position: 'relative',
+  },
+  headerContent: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  compactTitle: {
+    position: 'absolute',
+    top: 0, // Startet ganz oben ohne Padding
+    left: 0,
+    right: 0,
+    height: 44, // Exakt die minimale Header-Höhe
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#ffffff',
+    textAlign: 'center',
+    lineHeight: 44, // Perfekte vertikale Zentrierung für 44px
+    paddingTop: 0, // Kein zusätzliches Padding
+    paddingBottom: 0,
+    zIndex: 100, // Über anderen Inhalten
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#ffffff',
     marginBottom: 5,
   },
   greeting: {
     fontSize: 16,
-    color: '#666',
+    color: '#E2E8F0',
+    opacity: 0.9,
   },
   currentPeriod: {
     fontSize: 18,
@@ -480,13 +590,15 @@ const styles = StyleSheet.create({
   budgetCard: {
     backgroundColor: 'white',
     margin: 20,
-    padding: 20,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    padding: 24,
+    borderRadius: 16,
+    shadowColor: '#64748B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 0.5,
+    borderColor: '#E2E8F0',
   },
   budgetHeader: {
     flexDirection: 'row',
@@ -504,10 +616,15 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   setBudgetButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
+    backgroundColor: '#667eea',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    shadowColor: '#667eea',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
   setBudgetButtonText: {
     color: 'white',
@@ -517,8 +634,8 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666',
-    marginBottom: 10,
+    color: '#475569',
+    marginBottom: 12,
   },
   mainBudgetDisplay: {
     alignItems: 'center',
@@ -545,11 +662,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   progressBar: {
-    height: 8,
-    backgroundColor: '#E5E5EA',
-    borderRadius: 4,
+    height: 10,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 6,
     overflow: 'hidden',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   progressFill: {
     height: '100%',
@@ -596,33 +713,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
   },
-  statsRow: {
-    flexDirection: 'row',
-    marginHorizontal: 20,
-    marginBottom: 20,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
+
   chartCard: {
     backgroundColor: 'white',
     margin: 20,
-    padding: 20,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    padding: 24,
+    borderRadius: 16,
+    shadowColor: '#64748B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 4,
     alignItems: 'center',
+    borderWidth: 0.5,
+    borderColor: '#E2E8F0',
   },
   chart: {
     marginVertical: 8,
@@ -665,11 +769,15 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 8,
+    padding: 16,
+    borderRadius: 12,
     alignItems: 'center',
     marginHorizontal: 5,
+    shadowColor: '#64748B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   actionButtonText: {
     color: 'white',
@@ -700,5 +808,64 @@ const styles = StyleSheet.create({
     color: '#333',
     fontWeight: '500',
     flex: 1,
+  },
+  overviewSection: {
+    margin: 20,
+    marginTop: 0,
+  },
+  overviewButton: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#64748B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3,
+    borderWidth: 0.5,
+    borderColor: '#E2E8F0',
+  },
+  overviewButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  overviewIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#F0F9FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  overviewIcon: {
+    fontSize: 24,
+  },
+  overviewTextContainer: {
+    flex: 1,
+  },
+  overviewButtonTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1E293B',
+    marginBottom: 4,
+  },
+  overviewButtonSubtitle: {
+    fontSize: 14,
+    color: '#64748B',
+    lineHeight: 20,
+  },
+  overviewArrow: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#667eea',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  overviewArrowText: {
+    fontSize: 16,
+    color: 'white',
+    fontWeight: 'bold',
   },
 });

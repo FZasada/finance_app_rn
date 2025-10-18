@@ -83,7 +83,9 @@ export class FinanceService {
   // Analytics methods
   static async getMonthlySpending(householdId: string, year: number, month: number) {
     const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
-    const endDate = `${year}-${month.toString().padStart(2, '0')}-31`;
+    // Berechne den letzten Tag des Monats korrekt
+    const lastDayOfMonth = new Date(year, month, 0).getDate();
+    const endDate = `${year}-${month.toString().padStart(2, '0')}-${lastDayOfMonth.toString().padStart(2, '0')}`;
 
     const { data, error } = await supabase
       .from('transactions')
@@ -99,7 +101,9 @@ export class FinanceService {
 
   static async getMonthlyIncome(householdId: string, year: number, month: number) {
     const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
-    const endDate = `${year}-${month.toString().padStart(2, '0')}-31`;
+    // Berechne den letzten Tag des Monats korrekt
+    const lastDayOfMonth = new Date(year, month, 0).getDate();
+    const endDate = `${year}-${month.toString().padStart(2, '0')}-${lastDayOfMonth.toString().padStart(2, '0')}`;
 
     const { data, error } = await supabase
       .from('transactions')

@@ -57,7 +57,9 @@ export const transactionService = {
   // Hole Transaktionen für einen bestimmten Monat
   async getTransactionsForMonth(year: number, month: number, householdId?: string): Promise<Transaction[]> {
     const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
-    const endDate = `${year}-${month.toString().padStart(2, '0')}-31`;
+    // Berechne den letzten Tag des Monats korrekt (new Date(year, month, 0) gibt letzten Tag des Vormonats)
+    const lastDayOfMonth = new Date(year, month, 0).getDate();
+    const endDate = `${year}-${month.toString().padStart(2, '0')}-${lastDayOfMonth.toString().padStart(2, '0')}`;
 
     let query = supabase
       .from('transactions')
@@ -200,14 +202,14 @@ export const transactionService = {
   },
 
   /**
-   * Get budget analysis with separation of fixed costs and budget-relevant expenses
+   * Get simplified budget analysis where all expenses are budget-relevant
    */
   async getBudgetAnalysis(year: number, month: number, householdId?: string): Promise<{
     totalIncome: number;
     totalExpenses: number;
-    fixedCosts: number;
     budgetRelevantExpenses: number;
     netBalance: number;
+    monthlySavings: number;
     budgetRelevantByCategory: {
       categoryName: string;
       amount: number;
@@ -224,39 +226,18 @@ export const transactionService = {
     const expenses = transactions.filter(t => t.type === 'expense');
     const totalExpenses = expenses.reduce((sum, t) => sum + t.amount, 0);
     
-    // Separate fixed costs from budget-relevant expenses
-    // Fixed costs are typically: rent, insurance, subscriptions, utilities, etc.
-    // Support both English and German category names
-    const fixedCostCategories = [
-      'rent', 'miete', 'housing', 'wohnung',
-      'insurance', 'versicherung', 
-      'utilities', 'strom', 'gas', 'wasser', 'internet', 'fixkosten',
-      'subscription', 'abo', 'abonnement',
-      'loan', 'kredit', 'darlehen',
-      'mortgage', 'hypothek'
-    ];
+    // Alle Ausgaben sind jetzt budgetrelevant - keine Unterscheidung zwischen Fix- und variablen Kosten
+    const budgetRelevantExpenses = totalExpenses;
+    const netBalance = income - totalExpenses;
+    const monthlySavings = Math.max(0, netBalance); // Nur positive Ersparnisse zählen
     
-    const fixedCosts = expenses
-      .filter(t => {
-        const categoryName = t.category?.name?.toLowerCase() || '';
-        return fixedCostCategories.some(fixed => categoryName.includes(fixed));
-      })
-      .reduce((sum, t) => sum + t.amount, 0);
-    
-    const budgetRelevantExpenses = totalExpenses - fixedCosts;
-    
-    // Get budget-relevant expenses by category
-    const budgetRelevantTransactions = expenses.filter(t => {
-      const categoryName = t.category?.name?.toLowerCase() || '';
-      return !fixedCostCategories.some(fixed => categoryName.includes(fixed));
-    });
-    
+    // Alle Ausgaben nach Kategorien gruppieren
     const categoryMap = new Map<string, { amount: number; color: string; name: string }>();
     
-    budgetRelevantTransactions.forEach(transaction => {
+    expenses.forEach(transaction => {
       const categoryName = transaction.category?.name || 'other';
       const categoryColor = transaction.category?.color || '#B0B0B0';
-      const displayName = transaction.category?.name || 'Other';
+      const displayName = transaction.category?.name || 'Sonstiges';
       
       if (categoryMap.has(categoryName)) {
         categoryMap.get(categoryName)!.amount += transaction.amount;
@@ -279,9 +260,9 @@ export const transactionService = {
     return {
       totalIncome: income,
       totalExpenses,
-      fixedCosts,
       budgetRelevantExpenses,
-      netBalance: income - totalExpenses,
+      netBalance,
+      monthlySavings,
       budgetRelevantByCategory
     };
   },

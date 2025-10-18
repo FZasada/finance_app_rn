@@ -1,6 +1,4 @@
-import { Colors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Tabs } from 'expo-router';
 import React from 'react';
@@ -8,7 +6,6 @@ import { useTranslation } from 'react-i18next';
 
 export default function TabLayout() {
   const { user, loading } = useAuth();
-  const colorScheme = useColorScheme();
   
   // Always call the hook, but handle errors gracefully
   const { t } = useTranslation();
@@ -45,8 +42,27 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: '#667eea',
+        tabBarInactiveTintColor: '#64748B',
         headerShown: false,
+        tabBarStyle: {
+          backgroundColor: 'white',
+          borderTopWidth: 0.5,
+          borderTopColor: '#E2E8F0',
+          paddingBottom: 8,
+          paddingTop: 8,
+          height: 88,
+          shadowColor: '#64748B',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 8,
+          elevation: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+          marginBottom: 4,
+        },
       }}>
       <Tabs.Screen
         name="index"
@@ -67,21 +83,18 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="household"
-        options={{
-          title: translate('navigation.household'),
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'people' : 'people-outline'} size={24} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="settings"
         options={{
           title: translate('navigation.settings'),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'settings' : 'settings-outline'} size={24} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="household"
+        options={{
+          href: null, // Versteckt den Tab, aber behält die Route bei
         }}
       />
     </Tabs>

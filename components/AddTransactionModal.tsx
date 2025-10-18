@@ -7,15 +7,15 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    Alert,
-    Modal,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 interface AddTransactionModalProps {
@@ -335,7 +335,7 @@ export default function AddTransactionModal({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F8FAFC',
   },
   header: {
     flexDirection: 'row',
@@ -343,9 +343,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    backgroundColor: '#667eea',
+    borderBottomWidth: 0,
     paddingTop: Platform.OS === 'ios' ? 50 : 15,
   },
   headerButton: {
@@ -353,7 +352,7 @@ const styles = StyleSheet.create({
   },
   headerButtonText: {
     fontSize: 16,
-    color: '#007AFF',
+    color: '#ffffff',
   },
   headerButtonDisabled: {
     opacity: 0.5,
@@ -364,11 +363,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#ffffff',
   },
   content: {
     flex: 1,
     padding: 20,
+    backgroundColor: '#F8FAFC',
   },
   section: {
     marginBottom: 25,
@@ -376,14 +376,22 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: '#1E293B',
     marginBottom: 10,
   },
   typeToggle: {
     flexDirection: 'row',
     backgroundColor: 'white',
-    borderRadius: 10,
+    borderRadius: 12,
     padding: 4,
+    shadowColor: '#64748B',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   typeButton: {
     flex: 1,
@@ -396,7 +404,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   typeButtonActive: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#667eea',
   },
   typeButtonText: {
     fontSize: 16,
@@ -411,38 +419,62 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'white',
-    borderRadius: 10,
+    borderRadius: 12,
     paddingHorizontal: 15,
     paddingVertical: 12,
+    shadowColor: '#64748B',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   currencySymbol: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#1E293B',
     marginRight: 10,
   },
   amountInput: {
     flex: 1,
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#1E293B',
   },
   input: {
     backgroundColor: 'white',
-    borderRadius: 10,
+    borderRadius: 12,
     paddingHorizontal: 15,
     paddingVertical: 12,
     fontSize: 16,
-    color: '#333',
+    color: '#1E293B',
+    shadowColor: '#64748B',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   categorySelector: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: 'white',
-    borderRadius: 10,
+    borderRadius: 12,
     paddingHorizontal: 15,
     paddingVertical: 12,
+    shadowColor: '#64748B',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   categorySelectorContent: {
     flexDirection: 'row',
@@ -451,7 +483,7 @@ const styles = StyleSheet.create({
   },
   categorySelectorText: {
     fontSize: 16,
-    color: '#333',
+    color: '#1E293B',
     marginLeft: 12,
   },
   categorySelectorPlaceholder: {
@@ -516,11 +548,11 @@ const styles = StyleSheet.create({
     minHeight: 60,
   },
   categoryItemSelected: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#667eea',
   },
   categoryText: {
     fontSize: 16,
-    color: '#333',
+    color: '#1E293B',
     marginLeft: 12,
     flex: 1,
   },

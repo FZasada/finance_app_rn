@@ -5,8 +5,9 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Alert,
+    Animated,
     Modal,
-    ScrollView,
+    StatusBar,
     StyleSheet,
     Text,
     TextInput,
@@ -33,6 +34,36 @@ export default function HouseholdScreen() {
   const [householdName, setHouseholdName] = useState('');
   const [inviteCode, setInviteCode] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Animation values for collapsible header
+  const scrollY = new Animated.Value(0);
+  const headerHeight = scrollY.interpolate({
+    inputRange: [0, 80],
+    outputRange: [80, 44], // Minimaler kollabierter Header für beste UX
+    extrapolate: 'clamp',
+  });
+  const titleOpacity = scrollY.interpolate({
+    inputRange: [0, 40],
+    outputRange: [1, 0], // Großer Titel verschwindet
+    extrapolate: 'clamp',
+  });
+  const compactTitleOpacity = scrollY.interpolate({
+    inputRange: [40, 80],
+    outputRange: [0, 1], // Kompakter Titel erscheint
+    extrapolate: 'clamp',
+  });
+  
+  // Dynamisches Padding für minimalen kollabierten Header
+  const headerPaddingTop = scrollY.interpolate({
+    inputRange: [0, 80],
+    outputRange: [10, 0], // Padding verschwindet im kollabierten Zustand
+    extrapolate: 'clamp',
+  });
+  const headerPaddingBottom = scrollY.interpolate({
+    inputRange: [0, 80],
+    outputRange: [15, 0], // Padding verschwindet im kollabierten Zustand
+    extrapolate: 'clamp',
+  });
 
   const handleCreateHousehold = async () => {
     if (!householdName.trim()) {
@@ -259,12 +290,44 @@ export default function HouseholdScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('household.title')}</Text>
-      </View>
+    <SafeAreaView style={styles.safeAreaContainer} edges={['top', 'left', 'right']}>
+      <StatusBar backgroundColor="#667eea" barStyle="light-content" />
+      <View style={styles.container}>
+        <Animated.View style={[
+          styles.header, 
+          { 
+            height: headerHeight,
+            paddingTop: headerPaddingTop,
+            paddingBottom: headerPaddingBottom,
+          }
+        ]}>
+          {/* Compact Title - erscheint beim Scrollen */}
+          <Animated.Text style={[
+            styles.compactTitle,
+            { opacity: compactTitleOpacity }
+          ]}>
+            {t('household.title')}
+          </Animated.Text>
+          
+          {/* Header Content - verschwindet beim Scrollen */}
+          <Animated.View style={[
+            styles.headerContent,
+            { opacity: titleOpacity }
+          ]}>
+            <Text style={styles.title}>
+              {t('household.title')}
+            </Text>
+          </Animated.View>
+        </Animated.View>
       
-      <ScrollView style={styles.content}>
+        <Animated.ScrollView 
+          style={styles.content}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false }
+          )}
+          scrollEventThrottle={16}
+        >
         {/* Household Info */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
@@ -327,27 +390,38 @@ export default function HouseholdScreen() {
             </TouchableOpacity>
           )}
         </View>
-      </ScrollView>
+        </Animated.ScrollView>
       
       <CreateHouseholdModal />
       <JoinHouseholdModal />
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeAreaContainer: {
+    flex: 1,
+    backgroundColor: '#667eea',
+  },
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F8FAFC',
   },
   header: {
-    padding: 20,
-    backgroundColor: 'white',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 15,
+    backgroundColor: '#667eea',
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 0,
+    position: 'relative',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: 'white',
   },
   content: {
     flex: 1,
@@ -367,13 +441,13 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#1E293B',
     marginTop: 20,
     marginBottom: 10,
   },
   emptyText: {
     fontSize: 16,
-    color: '#666',
+    color: '#64748B',
     textAlign: 'center',
     marginBottom: 40,
   },
@@ -384,10 +458,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#007AFF',
+    backgroundColor: '#667eea',
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
+    shadowColor: '#64748B',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   primaryButtonText: {
     color: 'white',
@@ -403,10 +485,18 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#007AFF',
+    borderColor: '#667eea',
+    shadowColor: '#64748B',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   secondaryButtonText: {
-    color: '#007AFF',
+    color: '#667eea',
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 8,
@@ -416,11 +506,11 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 12,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: '#64748B',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -430,7 +520,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#1E293B',
     marginLeft: 12,
   },
   inviteSection: {
@@ -439,7 +529,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
+    color: '#64748B',
     marginBottom: 8,
   },
   inviteCodeContainer: {
@@ -454,14 +544,14 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontFamily: 'monospace',
-    color: '#333',
+    color: '#1E293B',
   },
   copyButton: {
     padding: 4,
   },
   inviteHint: {
     fontSize: 12,
-    color: '#666',
+    color: '#64748B',
   },
   memberItem: {
     flexDirection: 'row',
@@ -481,11 +571,11 @@ const styles = StyleSheet.create({
   memberName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: '#1E293B',
   },
   memberRole: {
     fontSize: 14,
-    color: '#666',
+    color: '#64748B',
     marginTop: 2,
   },
   actions: {
@@ -495,10 +585,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FF3B30',
+    backgroundColor: '#EF4444',
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
+    shadowColor: '#64748B',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   dangerButtonText: {
     color: 'white',
@@ -522,7 +620,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#1E293B',
     marginBottom: 20,
     textAlign: 'center',
   },
@@ -546,7 +644,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 6,
   },
   modalButtonPrimary: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#667eea',
   },
   modalButtonSecondary: {
     backgroundColor: '#f8f9fa',
@@ -559,8 +657,32 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   modalButtonTextSecondary: {
-    color: '#333',
+    color: '#1E293B',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  compactTitle: {
+    position: 'absolute',
+    top: 0, // Startet ganz oben ohne Padding
+    left: 0,
+    right: 0,
+    height: 44, // Exakt die minimale Header-Höhe
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'white',
+    textAlign: 'center',
+    lineHeight: 44, // Perfekte vertikale Zentrierung für 44px
+    paddingTop: 0, // Kein zusätzliches Padding
+    paddingBottom: 0,
+    zIndex: 100, // Über anderen Inhalten
+  },
+  headerContent: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
 });

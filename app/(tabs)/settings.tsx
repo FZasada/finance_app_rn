@@ -5,11 +5,13 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
+import { router } from 'expo-router';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Alert,
-    ScrollView,
+    Animated,
+    StatusBar,
     StyleSheet,
     Switch,
     Text,
@@ -37,6 +39,36 @@ export default function SettingsScreen() {
   const [darkMode, setDarkMode] = React.useState(colorScheme === 'dark');
   const [showDeleteDataModal, setShowDeleteDataModal] = React.useState(false);
   const [showCurrencyModal, setShowCurrencyModal] = React.useState(false);
+
+  // Animation values for collapsible header
+  const scrollY = new Animated.Value(0);
+  const headerHeight = scrollY.interpolate({
+    inputRange: [0, 80],
+    outputRange: [80, 44], // Minimaler kollabierter Header für beste UX
+    extrapolate: 'clamp',
+  });
+  const titleOpacity = scrollY.interpolate({
+    inputRange: [0, 40],
+    outputRange: [1, 0], // Großer Titel verschwindet
+    extrapolate: 'clamp',
+  });
+  const compactTitleOpacity = scrollY.interpolate({
+    inputRange: [40, 80],
+    outputRange: [0, 1], // Kompakter Titel erscheint
+    extrapolate: 'clamp',
+  });
+  
+  // Dynamisches Padding für minimalen kollabierten Header
+  const headerPaddingTop = scrollY.interpolate({
+    inputRange: [0, 80],
+    outputRange: [10, 0], // Padding verschwindet im kollabierten Zustand
+    extrapolate: 'clamp',
+  });
+  const headerPaddingBottom = scrollY.interpolate({
+    inputRange: [0, 80],
+    outputRange: [15, 0], // Padding verschwindet im kollabierten Zustand
+    extrapolate: 'clamp',
+  });
 
   const handleSignOut = () => {
     Alert.alert(
@@ -112,12 +144,44 @@ export default function SettingsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('settings.title')}</Text>
-      </View>
-      
-      <ScrollView style={styles.content}>
+    <SafeAreaView style={styles.safeAreaContainer} edges={['top', 'left', 'right']}>
+      <StatusBar backgroundColor="#667eea" barStyle="light-content" />
+      <View style={styles.container}>
+        <Animated.View style={[
+          styles.header, 
+          { 
+            height: headerHeight,
+            paddingTop: headerPaddingTop,
+            paddingBottom: headerPaddingBottom,
+          }
+        ]}>
+          {/* Compact Title - erscheint beim Scrollen */}
+          <Animated.Text style={[
+            styles.compactTitle,
+            { opacity: compactTitleOpacity }
+          ]}>
+            {t('settings.title')}
+          </Animated.Text>
+          
+          {/* Header Content - verschwindet beim Scrollen */}
+          <Animated.View style={[
+            styles.headerContent,
+            { opacity: titleOpacity }
+          ]}>
+            <Text style={styles.title}>
+              {t('settings.title')}
+            </Text>
+          </Animated.View>
+        </Animated.View>
+        
+        <Animated.ScrollView 
+          style={styles.content}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false }
+          )}
+          scrollEventThrottle={16}
+        >
         {/* User Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('settings.account')}</Text>
@@ -166,6 +230,19 @@ export default function SettingsScreen() {
               onPress={() => {
                 Alert.alert('Coming Soon', 'Notification settings will be available in the next update.');
               }}
+            />
+          </View>
+        </View>
+
+        {/* Household Settings */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('household.title')}</Text>
+          <View style={styles.card}>
+            <SettingItem
+              icon="people"
+              title={t('household.manageHousehold')}
+              subtitle={t('household.viewMembers')}
+              onPress={() => router.push('/household')}
             />
           </View>
         </View>
@@ -249,7 +326,7 @@ export default function SettingsScreen() {
             <Text style={styles.deleteDataText}>{t('settings.dataManagement')}</Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
+        </Animated.ScrollView>
 
       <DeleteDataModal
         visible={showDeleteDataModal}
@@ -262,27 +339,39 @@ export default function SettingsScreen() {
         onCurrencyChanged={setCurrency}
         currentCurrency={currency}
       />
+      </View>
     </SafeAreaView>
   );
 }
 
   const styles = StyleSheet.create({
+  safeAreaContainer: {
+    flex: 1,
+    backgroundColor: '#667eea', // Gleiche Farbe wie der Header für nahtlosen Übergang
+  },
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F8FAFC',
   },
   header: {
-    padding: 20,
-    backgroundColor: 'white',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 15,
+    backgroundColor: '#667eea',
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 0,
+    position: 'relative',
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#ffffff',
   },
   content: {
     flex: 1,
     padding: 20,
+    backgroundColor: '#F8FAFC',
   },
   section: {
     marginBottom: 24,
@@ -396,5 +485,29 @@ export default function SettingsScreen() {
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 8,
+  },
+  compactTitle: {
+    position: 'absolute',
+    top: 0, // Startet ganz oben ohne Padding
+    left: 0,
+    right: 0,
+    height: 44, // Exakt die minimale Header-Höhe
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'white',
+    textAlign: 'center',
+    lineHeight: 44, // Perfekte vertikale Zentrierung für 44px
+    paddingTop: 0, // Kein zusätzliches Padding
+    paddingBottom: 0,
+    zIndex: 100, // Über anderen Inhalten
+  },
+  headerContent: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
 });

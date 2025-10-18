@@ -11,13 +11,14 @@ import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    Alert,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Alert,
+  Animated,
+  RefreshControl,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -39,6 +40,41 @@ export default function TransactionsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+
+  // Animation values for collapsible header
+  const scrollY = new Animated.Value(0);
+  const headerHeight = scrollY.interpolate({
+    inputRange: [0, 80],
+    outputRange: [80, 44], // Minimaler kollabierter Header für beste UX
+    extrapolate: 'clamp',
+  });
+  const titleOpacity = scrollY.interpolate({
+    inputRange: [0, 40],
+    outputRange: [1, 0], // Großer Titel verschwindet
+    extrapolate: 'clamp',
+  });
+  const addButtonOpacity = scrollY.interpolate({
+    inputRange: [0, 40],
+    outputRange: [1, 0], // Add-Button verschwindet
+    extrapolate: 'clamp',
+  });
+  const compactTitleOpacity = scrollY.interpolate({
+    inputRange: [40, 80],
+    outputRange: [0, 1], // Kompakter Titel erscheint
+    extrapolate: 'clamp',
+  });
+  
+  // Dynamisches Padding für minimalen kollabierten Header
+  const headerPaddingTop = scrollY.interpolate({
+    inputRange: [0, 80],
+    outputRange: [10, 0], // Padding verschwindet im kollabierten Zustand
+    extrapolate: 'clamp',
+  });
+  const headerPaddingBottom = scrollY.interpolate({
+    inputRange: [0, 80],
+    outputRange: [15, 0], // Padding verschwindet im kollabierten Zustand
+    extrapolate: 'clamp',
+  });
 
   const loadTransactions = useCallback(async () => {
     if (!household) return;
@@ -259,28 +295,64 @@ export default function TransactionsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('transactions.title')}</Text>
-        <TouchableOpacity 
-          style={styles.addButton}
-          onPress={() => setShowAddModal(true)}
-        >
-          <Ionicons name="add" size={24} color="white" />
-        </TouchableOpacity>
-      </View>
+    <SafeAreaView style={styles.safeAreaContainer} edges={['top', 'left', 'right']}>
+      <StatusBar backgroundColor="#667eea" barStyle="light-content" />
+      <View style={styles.container}>
+        <Animated.View style={[
+          styles.header, 
+          { 
+            height: headerHeight,
+            paddingTop: headerPaddingTop,
+            paddingBottom: headerPaddingBottom,
+          }
+        ]}>
+          {/* Compact Title - erscheint beim Scrollen */}
+          <Animated.Text style={[
+            styles.compactTitle,
+            { opacity: compactTitleOpacity }
+          ]}>
+            {t('transactions.title')}
+          </Animated.Text>
+          
+          {/* Header Content - verschwindet beim Scrollen */}
+          <Animated.View style={[
+            styles.headerContent,
+            { opacity: titleOpacity }
+          ]}>
+            <Text style={styles.title}>
+              {t('transactions.title')}
+            </Text>
+            
+            <Animated.View style={[
+              styles.addButtonContainer,
+              { opacity: addButtonOpacity }
+            ]}>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => setShowAddModal(true)}
+              >
+                <Ionicons name="add" size={24} color="white" />
+              </TouchableOpacity>
+            </Animated.View>
+          </Animated.View>
+        </Animated.View>
       
-      {transactions.length === 0 && !loading ? (
-        <EmptyState />
-      ) : (
-        <ScrollView
-          style={styles.list}
-          contentContainerStyle={styles.listContent}
+        {transactions.length === 0 && !loading ? (
+          <EmptyState />
+        ) : (
+          <Animated.ScrollView
+            style={styles.list}
+            contentContainerStyle={styles.listContent}
+            onScroll={Animated.event(
+              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+              { useNativeDriver: false }
+            )}
+            scrollEventThrottle={16}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              tintColor="#007AFF"
+              tintColor="#667eea"
             />
           }
           showsVerticalScrollIndicator={false}
@@ -299,42 +371,52 @@ export default function TransactionsScreen() {
               ))}
             </CollapsibleMonthSection>
           ))}
-        </ScrollView>
-      )}
+          </Animated.ScrollView>
+        )}
 
       <AddTransactionModal
         visible={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSuccess={handleTransactionAdded}
       />
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeAreaContainer: {
+    flex: 1,
+    backgroundColor: '#667eea',
+  },
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F8FAFC',
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 15,
+    backgroundColor: '#667eea',
+    justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
-    backgroundColor: 'white',
+    minHeight: 0,
+    position: 'relative',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: 'white',
   },
   addButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     width: 40,
     height: 40,
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   addButtonText: {
     color: 'white',
@@ -359,10 +441,18 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   emptyButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#667eea',
     paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 12,
+    shadowColor: '#64748B',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 3,
   },
   emptyButtonText: {
     color: 'white',
@@ -382,7 +472,18 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#F1F5F9',
+    borderRadius: 8,
+    marginVertical: 2,
+    marginHorizontal: 4,
+    shadowColor: '#64748B',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
   },
   transactionIcon: {
     width: 48,
@@ -399,7 +500,7 @@ const styles = StyleSheet.create({
   transactionDescription: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: '#1E293B',
     marginBottom: 4,
   },
   transactionMeta: {
@@ -409,11 +510,11 @@ const styles = StyleSheet.create({
   },
   transactionCategory: {
     fontSize: 14,
-    color: '#666',
+    color: '#64748B',
   },
   transactionDate: {
     fontSize: 14,
-    color: '#666',
+    color: '#64748B',
   },
   transactionRight: {
     alignItems: 'flex-end',
@@ -427,6 +528,33 @@ const styles = StyleSheet.create({
   deleteButton: {
     padding: 8,
     borderRadius: 8,
-    backgroundColor: '#FFEBEE',
+    backgroundColor: '#FEF2F2',
+  },
+  compactTitle: {
+    position: 'absolute',
+    top: 0, // Startet ganz oben ohne Padding
+    left: 0,
+    right: 0,
+    height: 44, // Exakt die minimale Header-Höhe
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'white',
+    textAlign: 'center',
+    lineHeight: 44, // Perfekte vertikale Zentrierung für 44px
+    paddingTop: 0, // Kein zusätzliches Padding
+    paddingBottom: 0,
+    zIndex: 100, // Über anderen Inhalten
+  },
+  headerContent: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  addButtonContainer: {
+    // Container für den Add-Button
   },
 });

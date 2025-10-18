@@ -6,6 +6,7 @@ import {
     Alert,
     KeyboardAvoidingView,
     Platform,
+    StatusBar,
     StyleSheet,
     Text,
     TextInput,
@@ -39,7 +40,8 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <StatusBar backgroundColor="#667eea" barStyle="light-content" />
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
