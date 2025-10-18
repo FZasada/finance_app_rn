@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
 interface ThemeTestComponentProps {
   title?: string;
